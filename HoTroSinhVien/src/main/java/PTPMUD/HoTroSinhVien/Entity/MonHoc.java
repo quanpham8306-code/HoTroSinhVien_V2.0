@@ -1,0 +1,34 @@
+package PTPMUD.HoTroSinhVien.Entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@Table(name = "MonHoc")
+public class MonHoc {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int idMon;
+
+    @Column(nullable = false)
+    private String tenMonHoc;
+
+    @Column(nullable = false)
+    private int soTinChi;
+
+    @OneToMany(mappedBy = "monHoc")
+    private List<LopHocPhan> lopHocPhans = new ArrayList<>();
+
+    public MonHoc(String tenMonHoc, int soTinChi) {
+        this.tenMonHoc = tenMonHoc;
+        this.soTinChi = soTinChi;
+    }
+}
