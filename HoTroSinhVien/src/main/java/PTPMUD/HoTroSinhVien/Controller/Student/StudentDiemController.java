@@ -3,6 +3,8 @@ package PTPMUD.HoTroSinhVien.Controller.Student;
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.DiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
+import PTPMUD.HoTroSinhVien.Entity.Diem;
+import PTPMUD.HoTroSinhVien.Mapper.BangDiemMapper;
 import PTPMUD.HoTroSinhVien.Mapper.DiemMapper;
 import PTPMUD.HoTroSinhVien.Repository.DiemRepository;
 import PTPMUD.HoTroSinhVien.Service.DiemService;
@@ -27,29 +29,22 @@ public class StudentDiemController {
     DiemRepository diemRepository;
     DiemService diemService;
     DiemMapper diemMapper;
+    BangDiemMapper  bangDiemMapper;
 
     @GetMapping("/me")
     ResponseEntity<ResponseObject> getMyScore(Authentication authentication) {
         String maSv = authentication.getName();
 
-        List<DiemDTO> result = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSv(maSv)
-                .stream()
-                .map(diemMapper::entityToDto)
-                .toList();
+        List<Diem> diems = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSv(maSv);
+        List<BangDiemDTO> result = diemService.entityToBangDiemDTO(diems);
 
         if (result.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new ResponseObject("failed", "Can not found score of student", "")
             );
         }
-
-        BangDiemDTO bangDiem = new BangDiemDTO(
-                result,
-                diemService.tinhGPAByMaSv(maSv)
-        );
-
         return ResponseEntity.ok(
-                new ResponseObject("ok", "Query score successfully", bangDiem)
+                new ResponseObject("ok", "Query score successfully", result)
         );
     }
 

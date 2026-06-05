@@ -20,7 +20,7 @@ public class DataInitializer implements  CommandLineRunner {
 
             TaiKhoan admin = new TaiKhoan();
             admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setPassword(passwordEncoder.encode("1"));
             admin.setRole("ADMIN");
 
             taiKhoanRepository.save(admin);

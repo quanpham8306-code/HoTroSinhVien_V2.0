@@ -2,7 +2,6 @@ package PTPMUD.HoTroSinhVien.Service;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.ThoiKhoaBieuDTO;
-import PTPMUD.HoTroSinhVien.Entity.ChiTietThoiKhoaBieu;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
@@ -99,9 +98,8 @@ public class ThoiKhoaBieuService {
         validateKhongTrungLich(newSchedule);
 
         oldSchedule.setLoaiLich(newSchedule.getLoaiLich());
-        oldSchedule.clearChiTiet();
-        newSchedule.getChiTietThoiKhoaBieus()
-                .forEach(chiTiet -> addLopHocPhan(oldSchedule, chiTiet.getLopHocPhan()));
+
+        thoiKhoaBieuMapper.updateThoiKhoaBieu(oldSchedule,new ThoiKhoaBieu());
 
         return thoiKhoaBieuMapper.entityToDto(thoiKhoaBieuRepository.save(oldSchedule));
     }
@@ -134,18 +132,14 @@ public class ThoiKhoaBieuService {
 
     @Transactional(readOnly = true)
     public ByteArrayInputStream xuatExcelThoiKhoaBieu(String maSv) throws IOException {
-        List<ThoiKhoaBieu> danhSachLich = thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv);
-        SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
-        String tenSinhVien = sinhVien == null ? maSv : sinhVien.getHoTen();
 
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Lịch học");
             createHeader(sheet);
-            fillData(sheet, danhSachLich);
+            fillData(sheet, maSv);
             autoSizeColumns(sheet, 10);
-
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         }
@@ -187,9 +181,7 @@ public class ThoiKhoaBieuService {
     }
 
     private void addLopHocPhan(ThoiKhoaBieu thoiKhoaBieu, LopHocPhan lopHocPhan) {
-        ChiTietThoiKhoaBieu chiTiet = new ChiTietThoiKhoaBieu();
-        chiTiet.setLopHocPhan(lopHocPhan);
-        thoiKhoaBieu.addChiTiet(chiTiet);
+        thoiKhoaBieu.getLopHocPhan().add(lopHocPhan);
     }
 
     private void validateKhongTrungLich(ThoiKhoaBieu thoiKhoaBieu) {
@@ -200,11 +192,8 @@ public class ThoiKhoaBieuService {
     }
 
     private LopHocPhan findLopTrungLich(ThoiKhoaBieu thoiKhoaBieu) {
-        List<LopHocPhan> lopHocPhans = thoiKhoaBieu.getChiTietThoiKhoaBieus()
-                .stream()
-                .map(ChiTietThoiKhoaBieu::getLopHocPhan)
-                .toList();
 
+        List<LopHocPhan> lopHocPhans=thoiKhoaBieu.getLopHocPhan();
         for (int i = 0; i < lopHocPhans.size(); i++) {
             LopHocPhan lopTrung = LichHocValidator.timLopBiTrung(lopHocPhans.subList(i + 1, lopHocPhans.size()), lopHocPhans.get(i));
             if (lopTrung != null) {
@@ -226,14 +215,13 @@ public class ThoiKhoaBieuService {
         }
     }
 
-    private void fillData(Sheet sheet, List<ThoiKhoaBieu> danhSachLich) {
+    private void fillData(Sheet sheet,String maSv) {
         int rowIndex = 1;
 
-        for (ThoiKhoaBieu thoiKhoaBieu : danhSachLich) {
-            for (ChiTietThoiKhoaBieu chiTiet : thoiKhoaBieu.getChiTietThoiKhoaBieus()) {
-                rowIndex = writeRow(sheet, rowIndex, thoiKhoaBieu, chiTiet.getLopHocPhan());
-            }
-        }
+        for (ThoiKhoaBieu thoiKhoaBieu : thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv))
+            for(LopHocPhan lopHocPhan: thoiKhoaBieu.getLopHocPhan())
+            rowIndex = writeRow(sheet, rowIndex, thoiKhoaBieu, lopHocPhan);
+
     }
 
     private int writeRow(Sheet sheet, int rowIndex, ThoiKhoaBieu thoiKhoaBieu, LopHocPhan lop) {

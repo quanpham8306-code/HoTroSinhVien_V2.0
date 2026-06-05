@@ -12,7 +12,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BangDiemDTO {
-    private List<DiemDTO> danhSachDiem;
-    private Double gpa;
-
+    private String maMon;
+    private String tenMon;
+    private int soTin;
+    private double diemHocPhan;
+    private String diemChu;
+    private String trangThai;
 }

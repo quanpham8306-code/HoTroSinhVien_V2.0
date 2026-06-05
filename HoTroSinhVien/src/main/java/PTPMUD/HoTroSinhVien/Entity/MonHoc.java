@@ -19,6 +19,9 @@ public class MonHoc {
     private int idMon;
 
     @Column(nullable = false)
+    private String maMon;
+
+    @Column(nullable = false)
     private String tenMonHoc;
 
     @Column(nullable = false)

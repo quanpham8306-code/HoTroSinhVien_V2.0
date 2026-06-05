@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +30,9 @@ public class LopHocPhan {
 
     private String thu;
 
-    private Time gioBatDau;
+    private LocalTime gioBatDau;
 
-    private Time gioKetThuc;
+    private LocalTime gioKetThuc;
 
     private LocalDate ngayBatDau;
 
@@ -46,11 +47,10 @@ public class LopHocPhan {
     @ManyToOne
     @JoinColumn(name = "idMon")
     private MonHoc monHoc;
-    @OneToMany(mappedBy = "lopHocPhan")
-    private List<ChiTietThoiKhoaBieu> chiTietThoiKhoaBieus = new ArrayList<>();
 
 
-    public LopHocPhan(String giangVien, String phongHoc, String thu, Time gioBatDau, Time gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, String hocKy, String namHoc, MonHoc monHoc) {
+
+    public LopHocPhan(String giangVien, String phongHoc, String thu, LocalTime gioBatDau, LocalTime gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, String hocKy, String namHoc, MonHoc monHoc) {
         this.giangVien = giangVien;
         this.phongHoc = phongHoc;
         this.thu = thu;

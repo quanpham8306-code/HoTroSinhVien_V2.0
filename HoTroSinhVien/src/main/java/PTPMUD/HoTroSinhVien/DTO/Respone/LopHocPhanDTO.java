@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Setter
 @Getter
@@ -23,9 +24,9 @@ public class LopHocPhanDTO {
 
     private String thu;
 
-    private Time gioBatDau;
+    private LocalTime gioBatDau;
 
-    private Time gioKetThuc;
+    private LocalTime gioKetThuc;
 
     private LocalDate ngayBatDau;
 

@@ -29,14 +29,12 @@ public class SinhVien {
     private LocalDate ngaySinh;
 
     private Boolean gioiTinh;
-
+    @Email
     private String email;
 
     private String soDienThoai;
 
     private String lop;
-    @Email
-    private String mail;
 
     private String cccd;
 
@@ -45,14 +43,13 @@ public class SinhVien {
     @OneToOne(mappedBy = "sinhVien")
     private TaiKhoan taiKhoan;
 
-    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String mail, String cccd, String diaChi) {
+    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String cccd, String diaChi) {
         this.hoTen = hoTen;
         this.ngaySinh = ngaySinh;
         this.gioiTinh = gioiTinh;
         this.email = email;
         this.soDienThoai = soDienThoai;
         this.lop = lop;
-        this.mail = mail;
         this.cccd = cccd;
         this.diaChi = diaChi;
     }

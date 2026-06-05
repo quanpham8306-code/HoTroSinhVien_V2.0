@@ -1,6 +1,7 @@
 package PTPMUD.HoTroSinhVien.Service;
 
 import PTPMUD.HoTroSinhVien.DTO.Request.CreateDiemDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.ScoreSummaryDTO;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,6 +33,20 @@ public class DiemService {
         diem.setDangKyLopHocPhan(dangKy);
         updateDiemFromDto(diem, dto);
         return diem;
+    }
+    public List<BangDiemDTO> entityToBangDiemDTO(List<Diem> diems) {
+        List<BangDiemDTO> dtos = new ArrayList<>();
+        for (Diem diem : diems) {
+            BangDiemDTO dto = new BangDiemDTO();
+            dto.setMaMon(diem.getDangKyLopHocPhan().getLopHocPhan().getMonHoc().getMaMon());
+            dto.setTenMon(diem.getDangKyLopHocPhan().getLopHocPhan().getMonHoc().getTenMonHoc());
+            dto.setSoTin(diem.getDangKyLopHocPhan().getLopHocPhan().getMonHoc().getSoTinChi());
+            dto.setDiemHocPhan(diem.getDiemHocPhan());
+            dto.setDiemChu(diem.getDiemChu());
+            dto.setTrangThai(diem.getTrangThai());
+            dtos.add(dto);
+        }
+        return dtos;
     }
 
     @Transactional(readOnly = true)

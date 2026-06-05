@@ -12,6 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MonHocDTO {
     private String tenMonHoc;
-
+    private String maMon;
     private Integer soTinChi;
 }

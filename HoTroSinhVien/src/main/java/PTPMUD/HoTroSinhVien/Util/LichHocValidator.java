@@ -21,8 +21,8 @@ public final class LichHocValidator {
             return false;
         }
 
-        boolean trungGio = a.getGioBatDau().before(b.getGioKetThuc())
-                && b.getGioBatDau().before(a.getGioKetThuc());
+        boolean trungGio = a.getGioBatDau().isBefore(b.getGioKetThuc())
+                && b.getGioBatDau().isBefore(a.getGioKetThuc());
 
         return trungGio && trungNgay(a, b);
     }

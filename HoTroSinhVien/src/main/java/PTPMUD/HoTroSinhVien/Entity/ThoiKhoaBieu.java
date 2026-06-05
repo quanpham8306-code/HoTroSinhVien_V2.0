@@ -29,24 +29,17 @@ public class ThoiKhoaBieu {
     @JoinColumn(name = "idSv", nullable = false)
     private SinhVien sinhVien;
 
-    @OneToMany(
-            mappedBy = "thoiKhoaBieu",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private List<ChiTietThoiKhoaBieu> chiTietThoiKhoaBieus = new ArrayList<>();
+    @OneToMany()
+    @JoinColumn(name = "id_lop_hp")
+    private List <LopHocPhan> lopHocPhan;
+
 
     public ThoiKhoaBieu(String loaiLich) {
         this.loaiLich = loaiLich;
     }
 
-    public void addChiTiet(ChiTietThoiKhoaBieu chiTiet) {
-        chiTiet.setThoiKhoaBieu(this);
-        this.chiTietThoiKhoaBieus.add(chiTiet);
-    }
 
-    public void clearChiTiet() {
-        this.chiTietThoiKhoaBieus.forEach(ct -> ct.setThoiKhoaBieu(null));
-        this.chiTietThoiKhoaBieus.clear();
-    }
+
+
+
 }
