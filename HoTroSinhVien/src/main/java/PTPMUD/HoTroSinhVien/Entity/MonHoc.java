@@ -30,8 +30,9 @@ public class MonHoc {
     @OneToMany(mappedBy = "monHoc")
     private List<LopHocPhan> lopHocPhans = new ArrayList<>();
 
-    public MonHoc(String tenMonHoc, int soTinChi) {
-        this.tenMonHoc = tenMonHoc;
+    public MonHoc(int soTinChi,  String tenMonHoc) {
         this.soTinChi = soTinChi;
+
+        this.tenMonHoc = tenMonHoc;
     }
 }

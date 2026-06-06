@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -90,5 +91,11 @@ public class AdminLopHocPhanController {
         return ResponseEntity.ok(
                 new ResponseObject("ok", "Delete class successfully", "")
         );
+    }
+
+    @PostMapping("/importExcel")
+    ResponseEntity<?> importExcel(@RequestParam ("lichdangky")MultipartFile file){
+        lopHocPhanService.importExcel(file);
+        return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
     }
 }
