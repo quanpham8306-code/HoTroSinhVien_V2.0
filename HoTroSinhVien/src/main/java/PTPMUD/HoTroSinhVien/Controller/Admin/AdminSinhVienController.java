@@ -68,9 +68,5 @@ public class AdminSinhVienController {
             );
     }
 
-    @PostMapping ("/importExcel")
-    ResponseEntity<?> importExcel(@RequestParam ("danhSachSinhVien") MultipartFile file){
-        SinhVienService.importExcelSinhVien(file);
-        return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
-    }
+
 }
