@@ -1,7 +1,6 @@
 package PTPMUD.HoTroSinhVien.Controller.Student;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.DiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
 import PTPMUD.HoTroSinhVien.Mapper.BangDiemMapper;

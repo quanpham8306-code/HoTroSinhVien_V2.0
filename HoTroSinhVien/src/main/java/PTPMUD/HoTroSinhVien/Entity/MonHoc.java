@@ -21,7 +21,7 @@ public class MonHoc {
     @Column(nullable = false)
     private String maMon;
 
-    @Column(nullable = false)
+    @Column(nullable = false,columnDefinition = "NVARCHAR(100)" )
     private String tenMonHoc;
 
     @Column(nullable = false)

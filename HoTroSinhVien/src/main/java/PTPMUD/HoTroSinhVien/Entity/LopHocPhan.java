@@ -23,7 +23,7 @@ public class LopHocPhan {
 
     @Column(unique = true)
     private String maLopHP;
-
+    @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
     private String giangVien;
 
     private String phongHoc;
