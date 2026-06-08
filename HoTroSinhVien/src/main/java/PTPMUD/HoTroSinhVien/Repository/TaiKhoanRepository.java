@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface TaiKhoanRepository extends JpaRepository<TaiKhoan,Integer> {
     Optional<TaiKhoan> findByUsername(String username);
+    Boolean existsByUsername(String username);
 }

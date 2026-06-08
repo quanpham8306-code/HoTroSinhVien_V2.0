@@ -4,6 +4,7 @@ import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Entity.TaiKhoan;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
 import PTPMUD.HoTroSinhVien.Repository.TaiKhoanRepository;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -24,25 +25,107 @@ public class SinhVienService {
     SinhVienRepository sinhVienRepository;
     TaiKhoanRepository taiKhoanRepository;
 
+    @Transactional
     public SinhVien createSinhVien(SinhVien sinhVien) {
 
-        SinhVien savedSinhVien = sinhVienRepository.save(sinhVien);
+        String nganh = sinhVien.getNganh().trim();
+        sinhVien.setNganh(nganh);
 
-        String maSv = String.format("SV%03d", savedSinhVien.getIdSv());
-        savedSinhVien.setMaSv(maSv);
+        int namNhapHoc = sinhVien.getNamNhapHoc();
 
-        savedSinhVien = sinhVienRepository.save(savedSinhVien);
+        if (namNhapHoc < 2000 || namNhapHoc > 2100) {
+            throw new RuntimeException("Năm nhập học không hợp lệ");
+        }
 
-        TaiKhoan taiKhoan = new TaiKhoan();
+        String maNganh = getMaNganh(nganh);
+        String namShort = String.valueOf(namNhapHoc).substring(2);
 
-        taiKhoan.setUsername(maSv);
-        taiKhoan.setPassword(passwordEncoder.encode("1"));
-        taiKhoan.setRole("STUDENT");
-        taiKhoan.setSinhVien(savedSinhVien);
+        String prefix = maNganh + namShort;
 
+        int nextStt = getNextSttByPrefix(prefix);
+        String maSv = prefix + String.format("%03d", nextStt);
+
+        while (
+                sinhVienRepository.existsByMaSv(maSv)
+                        || taiKhoanRepository.existsByUsername(maSv)
+        ) {
+            nextStt++;
+            maSv = prefix + String.format("%03d", nextStt);
+        }
+
+        sinhVien.setSttTrongNganh(nextStt);
+        sinhVien.setMaSv(maSv);
+
+        TaiKhoan taiKhoan = new TaiKhoan(
+                sinhVien.getMaSv(),
+                passwordEncoder.encode("1"),
+                "STUDENT"
+        );
+
+        sinhVien.setTaiKhoan(taiKhoan);
         taiKhoanRepository.save(taiKhoan);
 
-        return savedSinhVien;
+        return sinhVienRepository.save(sinhVien);
+    }
+
+    private int getNextSttByPrefix(String prefix) {
+        return sinhVienRepository
+                .findTopByMaSvStartingWithOrderByMaSvDesc(prefix)
+                .map(sv -> {
+                    String maSv = sv.getMaSv();
+
+                    if (maSv == null || maSv.length() <= prefix.length()) {
+                        return 1;
+                    }
+
+                    String sttText = maSv.substring(prefix.length());
+
+                    try {
+                        return Integer.parseInt(sttText) + 1;
+                    } catch (NumberFormatException e) {
+                        return 1;
+                    }
+                })
+                .orElse(1);
+    }
+
+
+    private String getMaNganh(String nganh) {
+        return switch (nganh.trim().toLowerCase()) {
+            case "công nghệ thông tin" -> "CTTT";
+            case "an toàn thông tin" -> "ATTT";
+            case "điện tử viễn thông" -> "DTVT";
+            default -> getFirstLetters(nganh);
+        };
+    }
+
+    private String getFirstLetters(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
+
+        String normalized = removeVietnameseAccent(text);
+        StringBuilder result = new StringBuilder();
+
+        String[] words = normalized.trim().split("\\s+");
+
+        for (String word : words) {
+            result.append(Character.toUpperCase(word.charAt(0)));
+        }
+
+        return result.toString();
+    }
+
+    private String removeVietnameseAccent(String text) {
+        String normalized = java.text.Normalizer.normalize(
+                text,
+                java.text.Normalizer.Form.NFD
+        );
+
+        return normalized
+                .replaceAll("\\p{M}", "")
+                .replace("Đ", "D")
+                .replace("đ", "d");
     }
     private String getStringCell(
             Row row,
@@ -58,6 +141,32 @@ public class SinhVienService {
         return formatter
                 .formatCellValue(cell)
                 .trim();
+    }
+    private int getIntCell(Row row, int cellIndex, DataFormatter formatter) {
+        Cell cell = row.getCell(cellIndex);
+
+        if (cell == null || cell.getCellType() == CellType.BLANK) {
+            return 0;
+        }
+
+        try {
+            String value = formatter.formatCellValue(cell).trim();
+
+            if (value.isBlank()) {
+                return 0;
+            }
+
+            if (value.endsWith(".0")) {
+                value = value.substring(0, value.length() - 2);
+            }
+
+            return Integer.parseInt(value);
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Dữ liệu số không hợp lệ ở cột " + (cellIndex + 1)
+            );
+        }
     }
 
     private LocalDate getDateCell(Row row, int index) {
@@ -159,6 +268,17 @@ public class SinhVienService {
                     sinhVien.setDiaChi(
                             getStringCell(row, 7, formatter)
                     );
+                    String nganh = getStringCell(row, 8, formatter);
+                    if (nganh.isBlank()) {
+                        throw new RuntimeException("Ngành không được để trống");
+                    }
+                    sinhVien.setNganh(nganh);
+
+                    int namNhapHoc = getIntCell(row, 9, formatter);
+                    if (namNhapHoc < 2000 || namNhapHoc > 2100) {
+                        throw new RuntimeException("Năm nhập học không hợp lệ");
+                    }
+                    sinhVien.setNamNhapHoc(namNhapHoc);
 
 
                     if ((!cccd.isBlank()) && sinhVienRepository.existsSinhVienByCccd(cccd)  ) {
@@ -170,6 +290,7 @@ public class SinhVienService {
                         throw new RuntimeException(
                                 "Email đã tồn tại");
                     }
+
                     createSinhVien(sinhVien);
 
                 } catch (Exception e) {

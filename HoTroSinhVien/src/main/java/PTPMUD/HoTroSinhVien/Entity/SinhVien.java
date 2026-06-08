@@ -23,7 +23,7 @@ public class SinhVien {
     @Column(unique = true)
     private String maSv;
 
-    @Column(nullable = false)
+    @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
     private String hoTen;
 
     private LocalDate ngaySinh;
@@ -37,13 +37,19 @@ public class SinhVien {
     private String lop;
 
     private String cccd;
-
+    @Column(columnDefinition = "NVARCHAR(100)")
     private String diaChi;
+    @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
+    private String nganh;
+    @Column(nullable = false)
+    private int namNhapHoc;
 
     @OneToOne(mappedBy = "sinhVien")
     private TaiKhoan taiKhoan;
 
-    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String cccd, String diaChi) {
+    private int sttTrongNganh;
+
+    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String cccd, String diaChi, String nganh, int namNhapHoc) {
         this.hoTen = hoTen;
         this.ngaySinh = ngaySinh;
         this.gioiTinh = gioiTinh;
@@ -52,6 +58,7 @@ public class SinhVien {
         this.lop = lop;
         this.cccd = cccd;
         this.diaChi = diaChi;
+        this.nganh = nganh;
+        this.namNhapHoc = namNhapHoc;
     }
-
 }

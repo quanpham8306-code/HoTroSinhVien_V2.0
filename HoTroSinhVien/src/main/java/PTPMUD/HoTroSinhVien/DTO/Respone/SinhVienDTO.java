@@ -23,7 +23,8 @@ public class SinhVienDTO {
     private String email;
     private String soDienThoai;
     private String lop;
-    private String mail;
     private String cccd;
     private String diaChi;
+    private String nganh;
+    private int namNhapHoc;
 }

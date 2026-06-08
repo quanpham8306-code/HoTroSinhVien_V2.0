@@ -29,7 +29,8 @@ public class Diem {
     @Max(10)
     private double diemHocPhan;
     private String diemChu;
-    private String trangThai; // DAT, KHONG_DAT, CHUA_CO_DIEM
+    @Column(columnDefinition = "NVARCHAR(100)")
+    private String trangThai;
 
     public Diem(DangKyLopHocPhan dangKyLopHocPhan, double diemQuaTrinh, double diemCuoiKy) {
         this.dangKyLopHocPhan = dangKyLopHocPhan;
@@ -48,9 +49,9 @@ public class Diem {
     }
     private void setTrangThai(){
         if(diemHocPhan < 4)
-            this.trangThai = "Trượt";
+            this.trangThai = "Đạt";
         else
-            this.trangThai = "Qua môn";
+            this.trangThai = "Không đạt";
     }
     private String setDiemChu()
     {
