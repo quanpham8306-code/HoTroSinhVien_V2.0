@@ -11,10 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
@@ -43,5 +45,24 @@ public class StudentThoiKhoaBieuController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=lichhocfull.xlsx")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(excel));
+    }
+    @GetMapping("/excel/{maSv}")
+    public ResponseEntity<InputStreamResource> exportExcel(
+            @PathVariable String maSv) throws IOException {
+
+        ByteArrayInputStream excelFile =
+                thoiKhoaBieuService.xuatExcelThoiKhoaBieu(maSv);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=thoikhoabieu_" + maSv + ".xlsx"
+        );
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(excelFile));
     }
 }
