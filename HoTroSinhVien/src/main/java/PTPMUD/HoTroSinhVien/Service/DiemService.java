@@ -2,6 +2,7 @@ package PTPMUD.HoTroSinhVien.Service;
 
 import PTPMUD.HoTroSinhVien.DTO.Request.CreateDiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemTheoKy;
 import PTPMUD.HoTroSinhVien.DTO.Respone.ScoreSummaryDTO;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
@@ -33,6 +34,12 @@ public class DiemService {
         diem.setDangKyLopHocPhan(dangKy);
         updateDiemFromDto(diem, dto);
         return diem;
+    }
+    public BangDiemTheoKy entityToBangDiemTheoKy(List<Diem> diems) {
+       BangDiemTheoKy  bangDiemTheoKy = new BangDiemTheoKy();
+       bangDiemTheoKy.setBangDiemDTOS(entityToBangDiemDTO(diems));
+       bangDiemTheoKy.setHocKy(diems.getFirst().getDangKyLopHocPhan().getLopHocPhan().getHocKy());
+        return  bangDiemTheoKy;
     }
     public List<BangDiemDTO> entityToBangDiemDTO(List<Diem> diems) {
         List<BangDiemDTO> dtos = new ArrayList<>();

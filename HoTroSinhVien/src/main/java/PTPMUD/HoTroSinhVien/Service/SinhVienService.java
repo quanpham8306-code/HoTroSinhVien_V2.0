@@ -92,7 +92,7 @@ public class SinhVienService {
 
     private String getMaNganh(String nganh) {
         return switch (nganh.trim().toLowerCase()) {
-            case "công nghệ thông tin" -> "CTTT";
+            case "công nghệ thông tin" -> "CNTT";
             case "an toàn thông tin" -> "ATTT";
             case "điện tử viễn thông" -> "DTVT";
             default -> getFirstLetters(nganh);

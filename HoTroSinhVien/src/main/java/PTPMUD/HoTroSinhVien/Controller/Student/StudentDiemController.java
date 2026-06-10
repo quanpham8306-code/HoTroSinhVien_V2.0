@@ -1,6 +1,7 @@
 package PTPMUD.HoTroSinhVien.Controller.Student;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemTheoKy;
 import PTPMUD.HoTroSinhVien.DTO.Respone.DiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
@@ -56,9 +57,9 @@ public class StudentDiemController {
         String maSv = authentication.getName();
 
         List<Diem> diems = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_HocKy(maSv, ky);
-        List<BangDiemDTO> result = diemService.entityToBangDiemDTO(diems);
+        BangDiemTheoKy result =  diemService.entityToBangDiemTheoKy(diems);
 
-        if (result.isEmpty()) {
+        if (result == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new ResponseObject("failed", "Can not found score of student", "")
             );
