@@ -1,6 +1,7 @@
 package PTPMUD.HoTroSinhVien.Controller.Student;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.DiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
 import PTPMUD.HoTroSinhVien.Mapper.BangDiemMapper;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,8 +29,6 @@ public class StudentDiemController {
 
     DiemRepository diemRepository;
     DiemService diemService;
-    DiemMapper diemMapper;
-    BangDiemMapper  bangDiemMapper;
 
     @GetMapping("/me")
     ResponseEntity<ResponseObject> getMyScore(Authentication authentication) {
@@ -42,8 +42,30 @@ public class StudentDiemController {
                     new ResponseObject("failed", "Can not found score of student", "")
             );
         }
+
         return ResponseEntity.ok(
-                new ResponseObject("ok", "Query score successfully", result)
+                new ResponseObject("ok", "Query score successfully",result)
+        );
+    }
+    @GetMapping("/{ky}")
+    ResponseEntity<ResponseObject> getDiemByIdSv(
+            Authentication authentication,
+            @PathVariable int ky
+        )
+    {
+        String maSv = authentication.getName();
+
+        List<Diem> diems = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_HocKy(maSv, ky);
+        List<BangDiemDTO> result = diemService.entityToBangDiemDTO(diems);
+
+        if (result.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ResponseObject("failed", "Can not found score of student", "")
+            );
+        }
+
+        return ResponseEntity.ok(
+                new ResponseObject("ok", "Query score successfully",result)
         );
     }
 
@@ -56,6 +78,21 @@ public class StudentDiemController {
                         "ok",
                         "Query score summary successfully",
                         diemService.getSummaryByMaSv(maSv)
+                )
+        );
+    }
+    @GetMapping("/summary/{ky}")
+    ResponseEntity<ResponseObject> getMyScoreSummary(
+            Authentication authentication,
+            @PathVariable int ky)
+    {
+        String maSv = authentication.getName();
+
+        return ResponseEntity.ok(
+                new ResponseObject(
+                        "ok",
+                        "Query score summary successfully",
+                        diemService.getSummaryByMaSvAndKy(maSv, ky)
                 )
         );
     }

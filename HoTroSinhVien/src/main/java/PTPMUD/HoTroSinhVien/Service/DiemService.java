@@ -61,6 +61,12 @@ public class DiemService {
         return buildSummary(danhSachDiem);
     }
 
+    @Transactional(readOnly = true)
+    public ScoreSummaryDTO getSummaryByMaSvAndKy(String maSv,int ky) {
+        List<Diem> danhSachDiem = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_HocKy(maSv,ky);
+        return buildSummary(danhSachDiem);
+    }
+
     public double tinhGPAById(int idSv) {
         return tinhGPA(diemRepository.findByDangKyLopHocPhan_SinhVien_IdSv(idSv));
     }
@@ -102,6 +108,15 @@ public class DiemService {
     }
 
     private ScoreSummaryDTO buildSummary(List<Diem> danhSachDiem) {
+        double gpa = tinhGPA(danhSachDiem);
+        return new ScoreSummaryDTO(
+                gpa,
+                tinhTongTin(danhSachDiem),
+                danhSachDiem.size(),
+                xepLoaiTheoGPA(gpa)
+        );
+    }
+    private ScoreSummaryDTO buildSummaryByKy(List<Diem> danhSachDiem) {
         double gpa = tinhGPA(danhSachDiem);
         return new ScoreSummaryDTO(
                 gpa,

@@ -34,8 +34,7 @@ public class LopHocPhanDTO {
 
     private Integer siSoToiDa;
 
-    private String hocKy;
+    private int hocKy;
 
     private String namHoc;
-
 }

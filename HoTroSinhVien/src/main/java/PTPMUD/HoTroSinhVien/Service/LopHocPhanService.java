@@ -61,7 +61,7 @@ public class LopHocPhanService {
                         LocalDate ngayBatDau=LocalDate.parse(formatter.formatCellValue(row.getCell(7)));
                         LocalDate ngayKetThuc=LocalDate.parse(formatter.formatCellValue(row.getCell(8)));
                         int siSoToiDa =Integer.parseInt(formatter.formatCellValue(row.getCell(9)));
-                        String hocKy=formatter.formatCellValue(row.getCell(10));
+                        int hocKy=Integer.parseInt(formatter.formatCellValue(row.getCell(10)));
                         String namHoc=formatter.formatCellValue(row.getCell(11));
                         if(monHocRepository.findBytenMonHoc(tenMon)==null)
                         {
@@ -75,18 +75,13 @@ public class LopHocPhanService {
                     }catch(Exception o) {
                         System.out.println("Lỗi dòng " + (i + 1));
                         o.printStackTrace();
-
                     }
                 }
             }
             workbook.close();
         }catch(Exception e)
         {
-
             e.printStackTrace();
         }
-
     }
-
-
 }

@@ -40,7 +40,7 @@ public class LopHocPhan {
 
     private int siSoToiDa;
 
-    private String hocKy;
+    private int hocKy;
 
     private String namHoc;
 
@@ -50,7 +50,7 @@ public class LopHocPhan {
 
 
 
-    public LopHocPhan(String giangVien, String phongHoc, String thu, LocalTime gioBatDau, LocalTime gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, String hocKy, String namHoc, MonHoc monHoc) {
+    public LopHocPhan(String giangVien, String phongHoc, String thu, LocalTime gioBatDau, LocalTime gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, int hocKy, String namHoc, MonHoc monHoc) {
         this.giangVien = giangVien;
         this.phongHoc = phongHoc;
         this.thu = thu;
