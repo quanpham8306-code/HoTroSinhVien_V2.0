@@ -46,23 +46,5 @@ public class StudentThoiKhoaBieuController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(excel));
     }
-    @GetMapping("/excel/{maSv}")
-    public ResponseEntity<InputStreamResource> exportExcel(
-            @PathVariable String maSv) throws IOException {
 
-        ByteArrayInputStream excelFile =
-                thoiKhoaBieuService.xuatExcelThoiKhoaBieu(maSv);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(
-                HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=thoikhoabieu_" + maSv + ".xlsx"
-        );
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(new InputStreamResource(excelFile));
-    }
 }
