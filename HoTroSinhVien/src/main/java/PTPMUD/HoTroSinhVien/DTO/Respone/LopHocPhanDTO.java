@@ -22,7 +22,7 @@ public class LopHocPhanDTO {
 
     private String phongHoc;
 
-    private String thu;
+    private int thu;
 
     private LocalTime gioBatDau;
 

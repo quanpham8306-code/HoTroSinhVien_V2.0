@@ -21,6 +21,7 @@ public class LopHocPhan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idLopHP;
 
+    @Column(unique = true)
     private String maLopHP;
     @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
     private String giangVien;

@@ -55,20 +55,12 @@ public class Diem {
     }
     private String setDiemChu()
     {
-        if (this.diemHocPhan >= 9.0) {
-            diemChu = "A+";
-        } else if (this.diemHocPhan >= 8.5) {
+        if (this.diemHocPhan >= 8.5) {
             diemChu = "A";
-        } else if (this.diemHocPhan >= 7.8) {
-            diemChu = "B+";
         } else if (this.diemHocPhan >= 7.0) {
             diemChu = "B";
-        } else if (this.diemHocPhan >= 6.2) {
-            diemChu = "C+";
-        } else if (this.diemHocPhan >= 5.5) {
+        } else if (this.diemHocPhan >= 5.2) {
             diemChu = "C";
-        } else if (this.diemHocPhan >= 5.0) {
-            diemChu = "D+";
         } else if (this.diemHocPhan>= 4.0) {
             diemChu = "D";
         } else {

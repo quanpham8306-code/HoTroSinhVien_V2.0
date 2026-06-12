@@ -10,6 +10,9 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface LopHocPhanMapper {
+    LopHocPhan dtoToEntity(LopHocPhanDTO dto);
+    @Mapping(source = "monHoc.tenMonHoc", target = "tenMonHoc")
+    LopHocPhanDTO entityToDto(LopHocPhan lopHocPhan);
     void updateLPH(@MappingTarget LopHocPhan oldLPH, LopHocPhan newLPH);
     List<LopHocPhanDTO> entityToDTO(List<LopHocPhan> lph);
 }

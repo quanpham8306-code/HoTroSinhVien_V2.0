@@ -1,6 +1,5 @@
 package PTPMUD.HoTroSinhVien.Service;
 
-import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.MonHoc;
 import PTPMUD.HoTroSinhVien.Mapper.MonHocMapper;
@@ -10,15 +9,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.poi.ss.usermodel.*;
-import org.mapstruct.Mapping;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,48 +36,6 @@ public class LopHocPhanService {
 
         return lopHocPhanRepository.save(lopHocPhan);
     }
-    public LopHocPhan dtoToEntity(LopHocPhanDTO dto) {
-        LopHocPhan lopHocPhan = new LopHocPhan();
-
-        lopHocPhan.setMaLopHP(dto.getMaLopHP());
-        lopHocPhan.setGiangVien(dto.getGiangVien());
-        lopHocPhan.setHocKy(dto.getHocKy());
-        lopHocPhan.setNamHoc(dto.getNamHoc());
-        lopHocPhan.setSiSoToiDa(dto.getSiSoToiDa());
-
-        List<Integer> days = Arrays.stream(dto.getThu().split(","))
-                .map(String::trim)
-                .map(Integer::parseInt)
-                .toList();
-
-        return lopHocPhan;
-    }
-    LopHocPhanDTO entityToDto(LopHocPhan lopHocPhan){
-        LopHocPhanDTO dto = new LopHocPhanDTO();
-        dto.setHocKy(lopHocPhan.getHocKy());
-        dto.setNamHoc(lopHocPhan.getNamHoc());
-        dto.setMaLopHP(lopHocPhan.getMaLopHP());
-        dto.setPhongHoc(lopHocPhan.getPhongHoc());
-        dto.setThu(lopHocPhan.getThu()+"");
-        if(lopHocPhanRepository.sameMaLopHp(lopHocPhan.getMaLopHP()))
-        {
-            List<LopHocPhan> lphp = lopHocPhanRepository.findByMaLopHP(lopHocPhan.getMaLopHP());
-            String thus = null;
-            for(LopHocPhan lph : lphp)
-                {
-                thus = thus +","+lph.getThu();
-                }
-            dto.setThu(thus);
-        }
-        dto.setGiangVien(lopHocPhan.getGiangVien());
-        dto.setGioKetThuc(lopHocPhan.getGioKetThuc());
-        dto.setGioBatDau(lopHocPhan.getGioBatDau());
-        dto.setNgayBatDau(lopHocPhan.getNgayBatDau());
-        dto.setNgayKetThuc(lopHocPhan.getNgayKetThuc());
-        dto.setSiSoToiDa(lopHocPhan.getSiSoToiDa());
-        dto.setTenMonHoc(lopHocPhan.getMonHoc().getTenMonHoc());
-        return dto;
-    }
 
     public void importExcel(MultipartFile file){
         try{
@@ -102,7 +55,7 @@ public class LopHocPhanService {
                         int soTinChi=Integer.parseInt(formatter.formatCellValue(row.getCell(1)));
                         String giangVien=formatter.formatCellValue(row.getCell(2));
                         String phongHoc=formatter.formatCellValue(row.getCell(3));
-                        int thu=Integer.parseInt(formatter.formatCellValue(row.getCell(4)));
+                        int thu = Integer.parseInt(formatter.formatCellValue(row.getCell(4)));
                         LocalTime gioBatDau=LocalTime.parse(formatter.formatCellValue(row.getCell(5)));
                         LocalTime gioKetThuc=LocalTime.parse(formatter.formatCellValue(row.getCell(6)));
                         LocalDate ngayBatDau=LocalDate.parse(formatter.formatCellValue(row.getCell(7)));

@@ -2,7 +2,6 @@ package PTPMUD.HoTroSinhVien.Service;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.ThoiKhoaBieuDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.UpcomingScheduleDTO;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
@@ -26,8 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -121,13 +118,11 @@ public class ThoiKhoaBieuService {
         ThoiKhoaBieu thoiKhoaBieu = new ThoiKhoaBieu();
         thoiKhoaBieu.setSinhVien(findSinhVien(idSv));
         thoiKhoaBieu.setLoaiLich(resolveLoaiLich(dto.getLoaiLich()));
-/*
+
         dto.getLopHocPhanDTOList().stream()
                 .map(this::findLopHocPhan)
                 .forEach(lop -> addLopHocPhan(thoiKhoaBieu, lop));
 
-
- */
         return thoiKhoaBieu;
     }
 
@@ -169,12 +164,12 @@ public class ThoiKhoaBieuService {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy thời khóa biểu với id: " + idTkb));
     }
 
-    private List<LopHocPhan> findLopHocPhan(LopHocPhanDTO dto) {
+    private LopHocPhan findLopHocPhan(LopHocPhanDTO dto) {
         if (dto == null || dto.getMaLopHP() == null || dto.getMaLopHP().isBlank()) {
             throw new IllegalArgumentException("Lớp học phần trong DTO thiếu mã lớp");
         }
 
-        List<LopHocPhan> lopHocPhan = lopHocPhanRepository.findByMaLopHP(dto.getMaLopHP());
+        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(dto.getMaLopHP());
         if (lopHocPhan == null) {
             throw new RuntimeException("Không tìm thấy lớp học phần có mã: " + dto.getMaLopHP());
         }
@@ -207,64 +202,6 @@ public class ThoiKhoaBieuService {
         }
         return null;
     }
-    public List<UpcomingScheduleDTO> getUpcomingSchedules(String maSv) {
-        LocalDate today = LocalDate.now();
-
-        return lopHocPhanRepository
-                .findByDangKyLopHocPhan_SinhVien_MaSvAndNgayKetThucGreaterThanEqual(maSv,today)
-                .stream()
-                .map(lichHoc -> toUpcomingDTO(lichHoc, today))
-                .filter(dto -> !dto.getNgayHocGanNhat().isBefore(today))
-                .sorted(
-                        Comparator
-                                .comparing(UpcomingScheduleDTO::getNgayHocGanNhat)
-                                .thenComparing(UpcomingScheduleDTO::getGioBatDau)
-                )
-                .limit(3)
-                .toList();
-    }
-    private UpcomingScheduleDTO toUpcomingDTO(LopHocPhan lopHocPhan, LocalDate today) {
-        LocalDate nextStudyDate = getNextStudyDate(lopHocPhan, today);
-
-        return new UpcomingScheduleDTO(
-                lopHocPhan.getMonHoc().getTenMonHoc(),
-                lopHocPhan.getMaLopHP(),
-                lopHocPhan.getPhongHoc(),
-                lopHocPhan.getThu(),
-                nextStudyDate,
-                lopHocPhan.getGioBatDau(),
-                lopHocPhan.getGioKetThuc()
-        );
-    }
-    private LocalDate getNextStudyDate(LopHocPhan lopHocPhan, LocalDate today) {
-        int currentDay = today.getDayOfWeek().getValue();
-        // Java: Thứ 2 = 1, ..., Chủ nhật = 7
-
-        int targetDay = convertThuToDayOfWeek(lopHocPhan.getThu());
-
-        int daysToAdd = targetDay - currentDay;
-
-        if (daysToAdd < 0) {
-            daysToAdd += 7;
-        }
-
-        LocalDate nextDate = today.plusDays(daysToAdd);
-
-        if (nextDate.isBefore(lopHocPhan.getNgayBatDau())) {
-            return lopHocPhan.getNgayBatDau();
-        }
-
-        return nextDate;
-    }
-
-    private int convertThuToDayOfWeek(int thu) {
-        if (thu == 8) {
-            return 7;
-        }
-
-        return thu - 1;
-    }
-
 
     private void createHeader(Sheet sheet) {
         Row header = sheet.createRow(0);
