@@ -22,7 +22,7 @@ import java.util.List;
 public class LichAoService {
 
     LopHocPhanRepository lopHocPhanRepository;
-    LopHocPhanMapper lopHocPhanMapper;
+    LopHocPhanService lopHocPhanService;
 
     public CheckLichAoResponse checkThemLop(CheckLichAoRequest request) {
         LopHocPhan lopMoi = findLopHocPhan(request.getNewLopId());
@@ -41,7 +41,7 @@ public class LichAoService {
         return new CheckLichAoResponse(
                 true,
                 "Có thể thêm lớp này",
-                lopHocPhanMapper.entityToDto(lopMoi)
+                lopHocPhanService.entityToDto(lopMoi)
         );
     }
 

@@ -123,16 +123,6 @@ public class DiemService {
                 xepLoaiTheoGPA(gpa)
         );
     }
-    private ScoreSummaryDTO buildSummaryByKy(List<Diem> danhSachDiem) {
-        double gpa = tinhGPA(danhSachDiem);
-        return new ScoreSummaryDTO(
-                gpa,
-                tinhTongTin(danhSachDiem),
-                danhSachDiem.size(),
-                xepLoaiTheoGPA(gpa)
-        );
-    }
-
     private double tinhGPA(List<Diem> danhSachDiem) {
         int tongTin = tinhTongTin(danhSachDiem);
         if (tongTin == 0) {
@@ -143,7 +133,9 @@ public class DiemService {
                 .mapToDouble(diem -> diem.getDiemHocPhan() * soTinChi(diem))
                 .sum();
 
-        return round(tongDiem / tongTin);
+        double gpa = ((tongDiem / tongTin)/10)*4;
+
+        return gpa;
     }
 
     private int tinhTongTin(List<Diem> danhSachDiem) {
