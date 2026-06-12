@@ -13,7 +13,7 @@ public final class LichHocValidator {
         if (a == null || b == null) {
             return false;
         }
-        if (a.getThu() == null || b.getThu() == null || !a.getThu().equalsIgnoreCase(b.getThu())) {
+        if (a.getThu() == b.getThu()) {
             return false;
         }
         if (a.getGioBatDau() == null || a.getGioKetThuc() == null
