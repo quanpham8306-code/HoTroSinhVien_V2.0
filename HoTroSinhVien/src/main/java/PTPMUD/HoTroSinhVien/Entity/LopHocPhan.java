@@ -21,14 +21,13 @@ public class LopHocPhan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idLopHP;
 
-    @Column(unique = true)
     private String maLopHP;
     @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
     private String giangVien;
 
     private String phongHoc;
 
-    private String thu;
+    private int thu;
 
     private LocalTime gioBatDau;
 
@@ -50,7 +49,7 @@ public class LopHocPhan {
 
 
 
-    public LopHocPhan(String giangVien, String phongHoc, String thu, LocalTime gioBatDau, LocalTime gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, int hocKy, String namHoc, MonHoc monHoc) {
+    public LopHocPhan(String giangVien, String phongHoc, int thu, LocalTime gioBatDau, LocalTime gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, int hocKy, String namHoc, MonHoc monHoc) {
         this.giangVien = giangVien;
         this.phongHoc = phongHoc;
         this.thu = thu;

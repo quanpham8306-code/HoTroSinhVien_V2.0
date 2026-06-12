@@ -74,14 +74,26 @@ public class StudentDiemController {
     @GetMapping("/summary")
     ResponseEntity<ResponseObject> getMyScoreSummary(Authentication authentication) {
         String maSv = authentication.getName();
-
+        ScoreSummaryDTO scoreSummaryDTO = diemService.getSummaryByMaSv(maSv);
+        if(scoreSummaryDTO != null) {
+            return ResponseEntity.ok(
+                    new ResponseObject(
+                            "ok",
+                            "Query score summary successfully",
+                            scoreSummaryDTO
+                    )
+            );
+        }
+        else
+        {
         return ResponseEntity.ok(
                 new ResponseObject(
-                        "ok",
-                        "Query score summary successfully",
-                        diemService.getSummaryByMaSv(maSv)
+                        "false",
+                        "can not get score",
+                        new ScoreSummaryDTO(0,0,0,"Chưa có.")
                 )
         );
+        }
     }
     @GetMapping("/summary/{ky}")
     ResponseEntity<ResponseObject> getMyScoreSummary(
@@ -95,7 +107,7 @@ public class StudentDiemController {
                     new ResponseObject(
                             "ok",
                             "Query score summary successfully",
-                            diemService.getSummaryByMaSvAndKy(maSv, ky)
+                            scoreSummaryDTO
                     )
             );
         }
@@ -104,7 +116,7 @@ public class StudentDiemController {
                     new ResponseObject(
                             "false",
                             "can not get score",
-                            ""
+                            new ScoreSummaryDTO(0,0,0,"Chưa có.")
                     )
             );
     }
