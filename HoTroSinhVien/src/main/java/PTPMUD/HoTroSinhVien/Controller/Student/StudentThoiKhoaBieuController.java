@@ -7,13 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -47,4 +46,16 @@ public class StudentThoiKhoaBieuController {
                 .body(new InputStreamResource(excel));
     }
 
-}
+    @PostMapping("/import")
+    ResponseEntity<?> importMySchedulen(
+            Authentication authentication,
+            @RequestParam ("My schedule") MultipartFile file){
+
+        thoiKhoaBieuService.importExcel(file,authentication.getName());
+        return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
+    }
+
+    }
+
+
+

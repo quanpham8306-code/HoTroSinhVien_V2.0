@@ -34,4 +34,5 @@ public class StudentLichAoController {
                 new ResponseObject("failed", result.getMessage(), result)
         );
     }
+
 }
