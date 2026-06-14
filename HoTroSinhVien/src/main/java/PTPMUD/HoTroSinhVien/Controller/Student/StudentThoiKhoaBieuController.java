@@ -7,15 +7,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,8 +37,38 @@ public class StudentThoiKhoaBieuController {
                 )
         );
     }
+    @GetMapping("/{ky}")
+    ResponseEntity<ResponseObject> getScheduleByKy(
+            Authentication authentication,
+            @PathVariable int ky
+    ) {
+        String maSv = authentication.getName();
 
-    @GetMapping("/export")
+        return  ResponseEntity.ok(
+                new ResponseObject(
+                        "ok",
+                        "Query schedule successfully",
+                        thoiKhoaBieuService.getScheduleByKy(maSv, ky)
+                )
+        );
+    }
+    @GetMapping("/date/{date}")
+    ResponseEntity<ResponseObject> getScheduleByDate(
+            Authentication authentication,
+            @PathVariable LocalDate date)
+    {
+        String maSv = authentication.getName();
+
+        return  ResponseEntity.ok(
+                new ResponseObject(
+                        "ok",
+                        "Query schedule successfully",
+                        thoiKhoaBieuService.getScheduleByDate(maSv, date)
+                )
+        );
+    }
+
+        @GetMapping("/export")
     ResponseEntity<InputStreamResource> exportMySchedule(Authentication authentication) throws Exception {
         ByteArrayInputStream excel = thoiKhoaBieuService.xuatExcelThoiKhoaBieu(authentication.getName());
 
@@ -45,17 +77,23 @@ public class StudentThoiKhoaBieuController {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(excel));
     }
+    @GetMapping("/excel/{maSv}")
+    public ResponseEntity<InputStreamResource> exportExcel(
+            @PathVariable String maSv) throws IOException {
 
-    @PostMapping("/import")
-    ResponseEntity<?> importMySchedulen(
-            Authentication authentication,
-            @RequestParam ("My schedule") MultipartFile file){
+        ByteArrayInputStream excelFile =
+                thoiKhoaBieuService.xuatExcelThoiKhoaBieu(maSv);
 
-        thoiKhoaBieuService.importExcel(file,authentication.getName());
-        return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=thoikhoabieu_" + maSv + ".xlsx"
+        );
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(excelFile));
     }
-
-    }
-
-
-
+}

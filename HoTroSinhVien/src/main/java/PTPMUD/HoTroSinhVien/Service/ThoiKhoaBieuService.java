@@ -16,17 +16,18 @@ import PTPMUD.HoTroSinhVien.Util.LichHocValidator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -39,6 +40,7 @@ public class ThoiKhoaBieuService {
     ThoiKhoaBieuRepository thoiKhoaBieuRepository;
     LopHocPhanRepository lopHocPhanRepository;
     ThoiKhoaBieuMapper thoiKhoaBieuMapper;
+    LopHocPhanMapper lopHocPhanMapper;
 
     @Transactional(readOnly = true)
     public List<ThoiKhoaBieuDTO> getAllSchedule() {
@@ -101,7 +103,7 @@ public class ThoiKhoaBieuService {
 
         oldSchedule.setLoaiLich(newSchedule.getLoaiLich());
 
-        thoiKhoaBieuMapper.updateThoiKhoaBieu(oldSchedule, new ThoiKhoaBieu());
+        thoiKhoaBieuMapper.updateThoiKhoaBieu(oldSchedule,new ThoiKhoaBieu());
 
         return thoiKhoaBieuMapper.entityToDto(thoiKhoaBieuRepository.save(oldSchedule));
     }
@@ -130,6 +132,16 @@ public class ThoiKhoaBieuService {
 
     public boolean isTrungLich(ThoiKhoaBieu thoiKhoaBieu) {
         return findLopTrungLich(thoiKhoaBieu) != null;
+    }
+    public ThoiKhoaBieuDTO getScheduleByKy(String maSv, int hocKy)
+    {
+        ThoiKhoaBieuDTO dto = new ThoiKhoaBieuDTO();
+        List<DangKyLopHocPhan> dangKyLopHocPhanList = dangKyRepository.findBySinhVien_MaSvAndLopHocPhan_HocKy(maSv,hocKy);
+        List<LopHocPhan> lopHocPhanList = dangKyLopHocPhanList.stream()
+                .map(DangKyLopHocPhan::getLopHocPhan)
+                .toList();
+        dto.setLopHocPhanDTOList(lopHocPhanMapper.entityToDTO(lopHocPhanList));
+        return dto;
     }
 
     @Transactional(readOnly = true)
@@ -195,7 +207,7 @@ public class ThoiKhoaBieuService {
 
     private LopHocPhan findLopTrungLich(ThoiKhoaBieu thoiKhoaBieu) {
 
-        List<LopHocPhan> lopHocPhans = thoiKhoaBieu.getLopHocPhan();
+        List<LopHocPhan> lopHocPhans=thoiKhoaBieu.getLopHocPhan();
         for (int i = 0; i < lopHocPhans.size(); i++) {
             LopHocPhan lopTrung = LichHocValidator.timLopBiTrung(lopHocPhans.subList(i + 1, lopHocPhans.size()), lopHocPhans.get(i));
             if (lopTrung != null) {
@@ -217,12 +229,12 @@ public class ThoiKhoaBieuService {
         }
     }
 
-    private void fillData(Sheet sheet, String maSv) {
+    private void fillData(Sheet sheet,String maSv) {
         int rowIndex = 1;
 
         for (ThoiKhoaBieu thoiKhoaBieu : thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv))
-            for (LopHocPhan lopHocPhan : thoiKhoaBieu.getLopHocPhan())
-                rowIndex = writeRow(sheet, rowIndex, thoiKhoaBieu, lopHocPhan);
+            for(LopHocPhan lopHocPhan: thoiKhoaBieu.getLopHocPhan())
+            rowIndex = writeRow(sheet, rowIndex, thoiKhoaBieu, lopHocPhan);
 
     }
 
@@ -250,67 +262,28 @@ public class ThoiKhoaBieuService {
     private String empty(String value) {
         return value == null ? "" : value;
     }
+    public ThoiKhoaBieuDTO getScheduleByDate(String maSv, LocalDate date) {
+        LocalDate weekEnd = date.plusDays(6);
 
-    public boolean check_lopHP (Sheet sheet){
-        boolean kt=true;
-        DataFormatter formatter = new DataFormatter();
-        for(int i=1;i<=sheet.getLastRowNum();i++)
-        {
-            Row row=sheet.getRow(i);
-            if(row==null) continue;
-            {
-                try
-                {
-                    String maLopHP=formatter.formatCellValue(row.getCell(0));
-                    LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
-                    if(lopHocPhan==null){
-                        kt=false;
-                        break;
-                    }
-                }catch(Exception e)
-                {
-                    e.printStackTrace();
+        List<DangKyLopHocPhan> dangKyList =
+                dangKyRepository.findBySinhVien_MaSv(maSv);
 
-                }
-            }
-        }
-        return kt;
+        List<LopHocPhan> lopHocPhanList = dangKyList.stream()
+                .map(DangKyLopHocPhan::getLopHocPhan)
+                .filter(lhp -> isInWeek(lhp, date, weekEnd))
+                .toList();
+
+        ThoiKhoaBieuDTO dto = new ThoiKhoaBieuDTO();
+        dto.setLopHocPhanDTOList(lopHocPhanMapper.entityToDTO(lopHocPhanList));
+
+        return dto;
     }
-
-
-    public void importExcel(MultipartFile file, String maSv) {
-        try {
-            ThoiKhoaBieu thoiKhoaBieu=new ThoiKhoaBieu();
-            thoiKhoaBieu.setSinhVien(sinhVienRepository.findByMaSv(maSv));
-            Workbook workbook = WorkbookFactory.create(file.getInputStream());
-            Sheet sheet = workbook.getSheetAt(0);
-            DataFormatter formatter = new DataFormatter();
-            System.out.println(check_lopHP(sheet));
-            if(check_lopHP(sheet)==true) {
-                for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                    Row row = sheet.getRow(i);
-                    if (row == null) continue;
-                    {
-                        try {
-                            String maLopHP = formatter.formatCellValue(row.getCell(0));
-                            LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
-                            thoiKhoaBieu.getLopHocPhan().add(lopHocPhan);
-                            DangKyLopHocPhan dangKyLopHocPhan=new DangKyLopHocPhan();
-                            dangKyLopHocPhan.setSinhVien(sinhVienRepository.findByMaSv(maSv));
-                            dangKyLopHocPhan.setLopHocPhan(lopHocPhan);
-
-                            dangKyRepository.save(dangKyLopHocPhan);
-
-                        } catch (Exception o) {
-                        
-                            o.printStackTrace();
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    private boolean isInWeek(LopHocPhan lhp, LocalDate weekStart, LocalDate weekEnd) {
+        if (lhp.getNgayBatDau() == null || lhp.getNgayKetThuc() == null) {
+            return false;
         }
-    }
 
+        return !lhp.getNgayBatDau().isAfter(weekEnd)
+                && !lhp.getNgayKetThuc().isBefore(weekStart);
+    }
 }

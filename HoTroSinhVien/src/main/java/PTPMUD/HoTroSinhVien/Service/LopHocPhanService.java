@@ -14,6 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +31,7 @@ public class LopHocPhanService {
 
         int soLopHienCo = lopHocPhanRepository.countByMonHoc_IdMon(idMonHoc);
 
-        String maLopHP = monHoc.getMaMon() + "-L" + String.format("%02d", soLopHienCo + 1);
+        String maLopHP = monHoc.getTenMonHoc() + "-N" + String.format("%02d", soLopHienCo + 1);
 
         lopHocPhan.setMaLopHP(maLopHP);
         lopHocPhan.setMonHoc(monHoc);
@@ -51,25 +53,25 @@ public class LopHocPhanService {
                 {
                     try{
 
-                        String tenMon=formatter.formatCellValue(row.getCell(0));
-                        int soTinChi=Integer.parseInt(formatter.formatCellValue(row.getCell(1)));
-                        String giangVien=formatter.formatCellValue(row.getCell(2));
-                        String phongHoc=formatter.formatCellValue(row.getCell(3));
+                        String tenMon = formatter.formatCellValue(row.getCell(0));
+                        int soTinChi = Integer.parseInt(formatter.formatCellValue(row.getCell(1)));
+                        String giangVien = formatter.formatCellValue(row.getCell(2));
+                        String phongHoc = formatter.formatCellValue(row.getCell(3));
                         int thu = Integer.parseInt(formatter.formatCellValue(row.getCell(4)));
-                        LocalTime gioBatDau=LocalTime.parse(formatter.formatCellValue(row.getCell(5)));
-                        LocalTime gioKetThuc=LocalTime.parse(formatter.formatCellValue(row.getCell(6)));
-                        LocalDate ngayBatDau=LocalDate.parse(formatter.formatCellValue(row.getCell(7)));
-                        LocalDate ngayKetThuc=LocalDate.parse(formatter.formatCellValue(row.getCell(8)));
-                        int siSoToiDa =Integer.parseInt(formatter.formatCellValue(row.getCell(9)));
-                        int hocKy=Integer.parseInt(formatter.formatCellValue(row.getCell(10)));
-                        String namHoc=formatter.formatCellValue(row.getCell(11));
-                        if(monHocRepository.findBytenMonHoc(tenMon)==null)
+                        LocalTime gioBatDau = LocalTime.parse(formatter.formatCellValue(row.getCell(5)));
+                        LocalTime gioKetThuc = LocalTime.parse(formatter.formatCellValue(row.getCell(6)));
+                        LocalDate ngayBatDau = LocalDate.parse(formatter.formatCellValue(row.getCell(7)));
+                        LocalDate ngayKetThuc = LocalDate.parse(formatter.formatCellValue(row.getCell(8)));
+                        int siSoToiDa = Integer.parseInt(formatter.formatCellValue(row.getCell(9)));
+                        int hocKy = Integer.parseInt(formatter.formatCellValue(row.getCell(10)));
+                        int khoa = Integer.parseInt(formatter.formatCellValue(row.getCell(11)));
+                        if(monHocRepository.findBytenMonHoc(tenMon) == null)
                         {
-                            MonHoc mh=new MonHoc(soTinChi,tenMon);
+                            MonHoc mh = new MonHoc(soTinChi,tenMon);
                             monHocService.createMonHoc(mh);
                         }
                         LopHocPhan lopHocPhan= new LopHocPhan(giangVien,phongHoc,thu, gioBatDau,gioKetThuc,ngayBatDau
-                                ,ngayKetThuc,siSoToiDa,hocKy,namHoc,monHocRepository.findBytenMonHoc(tenMon));
+                                ,ngayKetThuc,siSoToiDa,hocKy,khoa,monHocRepository.findBytenMonHoc(tenMon));
                         createLPH(lopHocPhan,monHocRepository.findBytenMonHoc(tenMon).getIdMon());
 
                     }catch(Exception o) {
@@ -83,5 +85,10 @@ public class LopHocPhanService {
         {
             e.printStackTrace();
         }
+    }
+    public List<LopHocPhan> pickedClass(String tenMonHoc){
+        int hocKyLonNhat = lopHocPhanRepository.findMaxHocKy();
+        List<LopHocPhan> lopHocPhanList = lopHocPhanRepository.findByHocKyAndMonHoc_TenMonHoc(hocKyLonNhat,tenMonHoc);
+        return lopHocPhanList;
     }
 }

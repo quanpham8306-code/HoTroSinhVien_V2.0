@@ -21,7 +21,7 @@ public class MonHocService {
                 .map(word -> word.substring(0, 1).toUpperCase())
                 .collect(Collectors.joining());
 
-        return prefix;
+        return prefix + String.format("%03d", idMon);
     }
     public MonHoc createMonHoc(MonHoc monHoc) {
         MonHoc savedMonHoc = monHocRepository.save(monHoc);

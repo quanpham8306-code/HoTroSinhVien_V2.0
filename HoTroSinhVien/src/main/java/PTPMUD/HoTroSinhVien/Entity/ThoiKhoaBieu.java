@@ -31,15 +31,10 @@ public class ThoiKhoaBieu {
 
     @OneToMany()
     @JoinColumn(name = "id_lop_hp")
-    private List <LopHocPhan> lopHocPhan = new ArrayList<>();
+    private List <LopHocPhan> lopHocPhan;
 
 
     public ThoiKhoaBieu(String loaiLich) {
         this.loaiLich = loaiLich;
     }
-
-
-
-
-
 }
