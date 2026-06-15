@@ -1,6 +1,7 @@
 package PTPMUD.HoTroSinhVien.Controller.Student;
 
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
+import PTPMUD.HoTroSinhVien.Service.DangKyLopHocPhanService;
 import PTPMUD.HoTroSinhVien.Service.ThoiKhoaBieuService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 public class StudentThoiKhoaBieuController {
 
     ThoiKhoaBieuService thoiKhoaBieuService;
+    private final DangKyLopHocPhanService dangKyLopHocPhanService;
 
     @GetMapping("/me")
     ResponseEntity<ResponseObject> getMySchedule(Authentication authentication) {
@@ -95,5 +97,17 @@ public class StudentThoiKhoaBieuController {
                 .contentType(MediaType.parseMediaType(
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(excelFile));
+    }
+
+    @GetMapping("/baBuoiGanNhat")
+    public ResponseEntity<ResponseObject> baBuoiGanNhat(Authentication authentication) throws Exception{
+        String maSv=authentication.getName();
+        return ResponseEntity.ok(
+                new ResponseObject(
+                        "ok",
+                        "",
+                        dangKyLopHocPhanService.baBuoiGanNhat(maSv)
+                )
+        );
     }
 }

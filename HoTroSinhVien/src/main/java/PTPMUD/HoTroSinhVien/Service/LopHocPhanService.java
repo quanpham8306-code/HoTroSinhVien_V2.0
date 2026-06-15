@@ -1,7 +1,11 @@
 package PTPMUD.HoTroSinhVien.Service;
 
+import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.pickedClassDTO;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.MonHoc;
+import PTPMUD.HoTroSinhVien.Entity.SinhVien;
+import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
 import PTPMUD.HoTroSinhVien.Mapper.MonHocMapper;
 import PTPMUD.HoTroSinhVien.Repository.LopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.MonHocRepository;
@@ -24,6 +28,7 @@ public class LopHocPhanService {
     LopHocPhanRepository lopHocPhanRepository;
     MonHocRepository monHocRepository;
     private final MonHocService monHocService;
+    private final LopHocPhanMapper lopHocPhanMapper;
 
     public LopHocPhan createLPH(LopHocPhan lopHocPhan, int idMonHoc){
         MonHoc monHoc = monHocRepository.findById(idMonHoc)
@@ -64,14 +69,15 @@ public class LopHocPhanService {
                         LocalDate ngayKetThuc = LocalDate.parse(formatter.formatCellValue(row.getCell(8)));
                         int siSoToiDa = Integer.parseInt(formatter.formatCellValue(row.getCell(9)));
                         int hocKy = Integer.parseInt(formatter.formatCellValue(row.getCell(10)));
-                        int khoa = Integer.parseInt(formatter.formatCellValue(row.getCell(11)));
+                        String khoa = formatter.formatCellValue(row.getCell(11));
+                        String nganh=formatter.formatCellValue(row.getCell(12));
                         if(monHocRepository.findBytenMonHoc(tenMon) == null)
                         {
                             MonHoc mh = new MonHoc(soTinChi,tenMon);
                             monHocService.createMonHoc(mh);
                         }
                         LopHocPhan lopHocPhan= new LopHocPhan(giangVien,phongHoc,thu, gioBatDau,gioKetThuc,ngayBatDau
-                                ,ngayKetThuc,siSoToiDa,hocKy,khoa,monHocRepository.findBytenMonHoc(tenMon));
+                                ,ngayKetThuc,siSoToiDa,hocKy,khoa,monHocRepository.findBytenMonHoc(tenMon),nganh);
                         createLPH(lopHocPhan,monHocRepository.findBytenMonHoc(tenMon).getIdMon());
 
                     }catch(Exception o) {
@@ -86,9 +92,19 @@ public class LopHocPhanService {
             e.printStackTrace();
         }
     }
-    public List<LopHocPhan> pickedClass(String tenMonHoc){
-        int hocKyLonNhat = lopHocPhanRepository.findMaxHocKy();
-        List<LopHocPhan> lopHocPhanList = lopHocPhanRepository.findByHocKyAndMonHoc_TenMonHoc(hocKyLonNhat,tenMonHoc);
-        return lopHocPhanList;
+
+
+    public pickedClassDTO pickedClass(String maMon, String khoa, String nganh){
+        List<LopHocPhan> lopHocPhanList = lopHocPhanRepository.findByNgayBatDauAfterAndKhoaAndNganhAndMonHoc_MaMon(
+                LocalDate.now(),khoa,nganh,maMon);
+        List<LopHocPhanDTO> lopHocPhanDTOList=new ArrayList<>();
+        for(LopHocPhan lopHocPhan:lopHocPhanList)
+        {
+            LopHocPhanDTO lopHocPhanDTO=lopHocPhanMapper.entityToDto(lopHocPhan);
+            lopHocPhanDTOList.add(lopHocPhanDTO);
+        }
+        return new pickedClassDTO(maMon,lopHocPhanDTOList);
     }
+
+
 }

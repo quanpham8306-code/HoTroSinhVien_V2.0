@@ -26,5 +26,6 @@ public class SinhVienDTO {
     private String cccd;
     private String diaChi;
     private String nganh;
+    private String khoa;
     private int namNhapHoc;
 }

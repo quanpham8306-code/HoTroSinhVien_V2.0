@@ -1,8 +1,11 @@
 package PTPMUD.HoTroSinhVien.Service;
 
+import PTPMUD.HoTroSinhVien.DTO.Respone.BuoiHoc;
+import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
+import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
 import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.LopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
@@ -13,6 +16,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -23,6 +29,7 @@ public class DangKyLopHocPhanService {
     SinhVienRepository sinhVienRepository;
     LopHocPhanRepository lopHocPhanRepository;
     DangKyLopHocPhanRepository dangKyRepository;
+    private final LopHocPhanMapper lopHocPhanMapper;
 
     @Transactional
     public DangKyLopHocPhan dangKyLopHocPhan(int idSv, int idLopHP) {
@@ -76,5 +83,26 @@ public class DangKyLopHocPhanService {
     private LopHocPhan findLopHocPhan(int idLopHP) {
         return lopHocPhanRepository.findById(idLopHP)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần với id: " + idLopHP));
+    }
+
+    public List<BuoiHoc> baBuoiGanNhat(String maSv){
+        List<BuoiHoc> buoiHocList=new ArrayList<>();
+        LocalDate ngay=LocalDate.now();
+        LocalDate day=ngay;
+        while(buoiHocList.size()<3 && day.isBefore(LocalDate.now().plusYears(1)))
+        {
+            int thu=day.getDayOfWeek().getValue();
+            List<DangKyLopHocPhan> dangKyLopHocPhanList=dangKyRepository.findBySinhVien_MaSvAndLopHocPhan_Thu(maSv,thu);
+            dangKyLopHocPhanList.sort(Comparator.comparing(DangKyLopHocPhan -> DangKyLopHocPhan.getLopHocPhan().getGioBatDau()));
+            for(DangKyLopHocPhan dangKyLopHocPhan:dangKyLopHocPhanList)
+                if(!day.isBefore( dangKyLopHocPhan.getLopHocPhan().getNgayBatDau()) && !day.isAfter( dangKyLopHocPhan.getLopHocPhan().getNgayKetThuc()) && buoiHocList.size()<3)
+                {
+                    LopHocPhanDTO lopHocPhanDTO=lopHocPhanMapper.entityToDto(dangKyLopHocPhan.getLopHocPhan());
+                    BuoiHoc buoiHoc=new BuoiHoc(day,lopHocPhanDTO);
+                    buoiHocList.add(buoiHoc);
+                }
+            day=day.plusDays(1);
+        }
+    return buoiHocList;
     }
 }

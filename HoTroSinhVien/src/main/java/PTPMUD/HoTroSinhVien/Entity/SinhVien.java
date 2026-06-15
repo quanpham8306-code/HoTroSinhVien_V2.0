@@ -41,6 +41,8 @@ public class SinhVien {
     private String diaChi;
     @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
     private String nganh;
+    @Column(nullable = true)
+    private String khoa;
     @Column(nullable = false)
     private int namNhapHoc;
 
@@ -49,7 +51,7 @@ public class SinhVien {
 
     private int sttTrongNganh;
 
-    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String cccd, String diaChi, String nganh, int namNhapHoc) {
+    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String cccd, String diaChi, String nganh, int namNhapHoc,int khoa) {
         this.hoTen = hoTen;
         this.ngaySinh = ngaySinh;
         this.gioiTinh = gioiTinh;
@@ -60,5 +62,11 @@ public class SinhVien {
         this.diaChi = diaChi;
         this.nganh = nganh;
         this.namNhapHoc = namNhapHoc;
+
+    }
+    @PrePersist
+    @PreUpdate
+    private  void prePersistUpdate() {
+        this.khoa = "K" + String.valueOf(this.namNhapHoc).substring(2);
     }
 }

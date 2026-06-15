@@ -41,16 +41,17 @@ public class LopHocPhan {
     private int siSoToiDa;
 
     private int hocKy;
+    @Column(nullable = true)
+    private String khoa;
 
-    private int khoa;
-
+    private String nganh;
     @ManyToOne
     @JoinColumn(name = "idMon")
     private MonHoc monHoc;
 
 
 
-    public LopHocPhan(String giangVien, String phongHoc, int thu, LocalTime gioBatDau, LocalTime gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, int hocKy, int khoa, MonHoc monHoc) {
+    public LopHocPhan(String giangVien, String phongHoc, int thu, LocalTime gioBatDau, LocalTime gioKetThuc, LocalDate ngayBatDau, LocalDate ngayKetThuc, int siSoToiDa, int hocKy, String khoa, MonHoc monHoc,String nganh) {
         this.giangVien = giangVien;
         this.phongHoc = phongHoc;
         this.thu = thu;
@@ -62,6 +63,7 @@ public class LopHocPhan {
         this.hocKy = hocKy;
         this.khoa = khoa;
         this.monHoc = monHoc;
+        this.nganh=nganh;
     }
 }
 

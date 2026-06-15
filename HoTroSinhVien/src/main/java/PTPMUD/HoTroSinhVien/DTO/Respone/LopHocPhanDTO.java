@@ -37,4 +37,8 @@ public class LopHocPhanDTO {
     private int hocKy;
 
     private String namHoc;
+
+    private String nganh;
+
+    private String khoa;
 }

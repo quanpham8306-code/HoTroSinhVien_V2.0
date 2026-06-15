@@ -20,4 +20,8 @@ public interface DangKyLopHocPhanRepository extends JpaRepository<DangKyLopHocPh
     List<DangKyLopHocPhan> findBySinhVien_MaSvAndLopHocPhan_HocKy(String maSv, int hocKy);
 
     List<DangKyLopHocPhan> findBySinhVien_MaSv(String maSv);
+
+    List<DangKyLopHocPhan> findBySinhVien_MaSvAndLopHocPhan_Thu(String maSv,int thu);
+
+
 }

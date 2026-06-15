@@ -18,7 +18,7 @@ public class MonHoc {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idMon;
 
-    @Column(nullable = false)
+    @Column(nullable =true)
     private String maMon;
 
     @Column(nullable = false,columnDefinition = "NVARCHAR(100)" )

@@ -3,6 +3,7 @@ package PTPMUD.HoTroSinhVien.Controller.Student;
 import PTPMUD.HoTroSinhVien.DTO.Request.CheckLichAoRequest;
 import PTPMUD.HoTroSinhVien.DTO.Respone.CheckLichAoResponse;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
+import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
 import PTPMUD.HoTroSinhVien.Service.LichAoService;
 import PTPMUD.HoTroSinhVien.Service.LopHocPhanService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class StudentLichAoController {
 
     private final LichAoService lichAoService;
     private final LopHocPhanService lopHocPhanService;
+    private final SinhVienRepository sinhVienRepository;
 
     @PostMapping("/check-them-lop")
     public ResponseEntity<ResponseObject> checkThemLop(
@@ -34,15 +36,18 @@ public class StudentLichAoController {
                 new ResponseObject("failed", result.getMessage(), result)
         );
     }
-    @GetMapping("/picked-class/{mon}")
+    @GetMapping("/picked-class/{khoa}/{maMon}")
     public ResponseEntity<ResponseObject> pickedClass(
-            @PathVariable String mon
+            @PathVariable String maMon,
+            @PathVariable String khoa,
+            Authentication authentication
     ){
+        String maSv=authentication.getName();
         return ResponseEntity.ok(
                 new ResponseObject(
                         "ok",
                         "",
-                        lopHocPhanService.pickedClass(mon)
+                        lopHocPhanService.pickedClass(maMon,khoa,sinhVienRepository.findByMaSv(maSv).getNganh())
                 )
         );
     }
