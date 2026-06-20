@@ -12,6 +12,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class CheckLichAoRequest {
-    private List<Integer> selectedLopIds;
-    private Integer newLopId;
+    private List<String> selectedLopMaLops;
+    private String newLopMaLop;
 }

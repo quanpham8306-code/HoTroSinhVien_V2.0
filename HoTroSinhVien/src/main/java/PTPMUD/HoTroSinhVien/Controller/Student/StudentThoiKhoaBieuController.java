@@ -28,7 +28,6 @@ public class StudentThoiKhoaBieuController {
 
     ThoiKhoaBieuService thoiKhoaBieuService;
     private final DangKyLopHocPhanService dangKyLopHocPhanService;
-    private final SinhVienRepository sinhVienRepository;
 
     @GetMapping("/me")
     ResponseEntity<ResponseObject> getMySchedule(Authentication authentication) {
@@ -71,7 +70,7 @@ public class StudentThoiKhoaBieuController {
         );
     }
 
-        @GetMapping("/export")
+    @GetMapping("/export")
     ResponseEntity<InputStreamResource> exportMySchedule(Authentication authentication) throws Exception {
         ByteArrayInputStream excel = thoiKhoaBieuService.xuatExcelThoiKhoaBieu(authentication.getName());
 
@@ -79,25 +78,6 @@ public class StudentThoiKhoaBieuController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=lichhocfull.xlsx")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new InputStreamResource(excel));
-    }
-    @GetMapping("/excel/{maSv}")
-    public ResponseEntity<InputStreamResource> exportExcel(
-            @PathVariable String maSv) throws IOException {
-
-        ByteArrayInputStream excelFile =
-                thoiKhoaBieuService.xuatExcelThoiKhoaBieu(maSv);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(
-                HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=thoikhoabieu_" + maSv + ".xlsx"
-        );
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(new InputStreamResource(excelFile));
     }
 
     @GetMapping("/baBuoiGanNhat")

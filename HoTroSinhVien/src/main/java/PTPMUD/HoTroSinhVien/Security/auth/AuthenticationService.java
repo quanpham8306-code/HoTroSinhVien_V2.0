@@ -26,7 +26,9 @@ public class AuthenticationService {
                 loginRequest.getPassword(),
                 taiKhoan.get().getPassword()))
         {
+            System.out.println(taiKhoan.get().getUsername()+" "+taiKhoan.get().getRole());
             return new LoginResponse(
+                    taiKhoan.get().getRole(),
                     jwtService.createToken(taiKhoan.get())
             );
         }
