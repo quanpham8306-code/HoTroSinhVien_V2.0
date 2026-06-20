@@ -27,5 +27,16 @@ public class DataInitializer implements  CommandLineRunner {
 
             System.out.println("Admin account created!");
         }
+        if (taiKhoanRepository.findByUsername("SV01").isEmpty()) {
+
+            TaiKhoan admin = new TaiKhoan();
+            admin.setUsername("SV01");
+            admin.setPassword(passwordEncoder.encode("1"));
+            admin.setRole("STUDENT");
+
+            taiKhoanRepository.save(admin);
+
+            System.out.println("STUDENT account created!");
+        }
     }
 }

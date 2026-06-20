@@ -5,13 +5,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class pickedClassDTO {
-    private String mon;
-    private List<LopHocPhanDTO> lopHocPhanDTOList = new ArrayList<>();
+public class NoteRespone {
+    private String title;
+    private LocalDate date;
+    private String tag;
+    private String note;
 }

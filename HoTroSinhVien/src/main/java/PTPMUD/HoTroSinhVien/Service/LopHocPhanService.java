@@ -36,7 +36,7 @@ public class LopHocPhanService {
 
         int soLopHienCo = lopHocPhanRepository.countByMonHoc_IdMon(idMonHoc);
 
-        String maLopHP = monHoc.getTenMonHoc() + "-N" + String.format("%02d", soLopHienCo + 1);
+        String maLopHP = monHoc.getTenMonHoc() +lopHocPhan.getKhoa()+ "-N" + String.format("%02d", soLopHienCo + 1);
 
         lopHocPhan.setMaLopHP(maLopHP);
         lopHocPhan.setMonHoc(monHoc);
@@ -105,6 +105,4 @@ public class LopHocPhanService {
         }
         return new pickedClassDTO(maMon,lopHocPhanDTOList);
     }
-
-
 }

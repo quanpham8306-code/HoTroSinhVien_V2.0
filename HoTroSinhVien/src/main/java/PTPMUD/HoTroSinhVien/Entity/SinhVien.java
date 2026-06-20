@@ -1,5 +1,6 @@
 package PTPMUD.HoTroSinhVien.Entity;
 
+import PTPMUD.HoTroSinhVien.Security.crypto.StringCryptoConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.Getter;
@@ -31,12 +32,13 @@ public class SinhVien {
     private Boolean gioiTinh;
     @Email
     private String email;
-
+    @Convert(converter = StringCryptoConverter.class)
     private String soDienThoai;
 
     private String lop;
-
+    @Convert(converter = StringCryptoConverter.class)
     private String cccd;
+    @Convert(converter = StringCryptoConverter.class)
     @Column(columnDefinition = "NVARCHAR(100)")
     private String diaChi;
     @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
@@ -51,7 +53,7 @@ public class SinhVien {
 
     private int sttTrongNganh;
 
-    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String cccd, String diaChi, String nganh, int namNhapHoc,int khoa) {
+    public SinhVien(String hoTen, LocalDate ngaySinh, Boolean gioiTinh, String email, String soDienThoai, String lop, String cccd, String diaChi, String nganh, int namNhapHoc,String khoa) {
         this.hoTen = hoTen;
         this.ngaySinh = ngaySinh;
         this.gioiTinh = gioiTinh;
@@ -69,4 +71,5 @@ public class SinhVien {
     private  void prePersistUpdate() {
         this.khoa = "K" + String.valueOf(this.namNhapHoc).substring(2);
     }
+
 }
