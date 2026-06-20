@@ -1,6 +1,7 @@
 package PTPMUD.HoTroSinhVien.Controller.Student;
 
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
+import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
 import PTPMUD.HoTroSinhVien.Service.DangKyLopHocPhanService;
 import PTPMUD.HoTroSinhVien.Service.ThoiKhoaBieuService;
 import lombok.AccessLevel;
@@ -8,13 +9,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -28,6 +28,7 @@ public class StudentThoiKhoaBieuController {
 
     ThoiKhoaBieuService thoiKhoaBieuService;
     private final DangKyLopHocPhanService dangKyLopHocPhanService;
+    private final SinhVienRepository sinhVienRepository;
 
     @GetMapping("/me")
     ResponseEntity<ResponseObject> getMySchedule(Authentication authentication) {
@@ -109,5 +110,18 @@ public class StudentThoiKhoaBieuController {
                         dangKyLopHocPhanService.baBuoiGanNhat(maSv)
                 )
         );
+    }
+
+    @PostMapping("/importExcel")
+    ResponseEntity<?> importExcel(
+            @RequestParam ("thoikhoabieu")MultipartFile file,
+            Authentication authentication
+    ){
+        try {
+            thoiKhoaBieuService.nhapExcelThoiKhoaBieu(file,authentication.getName());
+            return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
