@@ -16,17 +16,18 @@ import PTPMUD.HoTroSinhVien.Util.LichHocValidator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -233,8 +234,10 @@ public class ThoiKhoaBieuService {
         int rowIndex = 1;
 
         for (ThoiKhoaBieu thoiKhoaBieu : thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv))
-            for(LopHocPhan lopHocPhan: thoiKhoaBieu.getLopHocPhan())
-            rowIndex = writeRow(sheet, rowIndex, thoiKhoaBieu, lopHocPhan);
+            if(thoiKhoaBieu.getLoaiLich().equalsIgnoreCase("LICH_AO")) {
+                for (LopHocPhan lopHocPhan : thoiKhoaBieu.getLopHocPhan())
+                    rowIndex = writeRow(sheet, rowIndex, thoiKhoaBieu, lopHocPhan);
+            }
 
     }
 
@@ -286,4 +289,38 @@ public class ThoiKhoaBieuService {
         return !lhp.getNgayBatDau().isAfter(weekEnd)
                 && !lhp.getNgayKetThuc().isBefore(weekStart);
     }
+
+    public void nhapExcelThoiKhoaBieu(MultipartFile file,String maSv) throws Exception{
+
+        try {
+            Workbook workbook = WorkbookFactory.create(file.getInputStream());
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+            SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
+            ThoiKhoaBieu thoiKhoaBieu=new ThoiKhoaBieu("CHINH_THUC");
+            thoiKhoaBieu.setSinhVien(sinhVien);
+            for(int i=1;i<=sheet.getLastRowNum();i++)
+            {
+
+                Row row=sheet.getRow(i);
+                if(row==null) continue;
+                else {
+
+                    try {
+                        String maLopHP = formatter.formatCellValue(row.getCell(1));
+                        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
+                        thoiKhoaBieu.getLopHocPhan().add(lopHocPhan);
+                        DangKyLopHocPhan dangKyLopHocPhan = new DangKyLopHocPhan(sinhVien,lopHocPhan);
+                        dangKyRepository.save(dangKyLopHocPhan);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
 }
