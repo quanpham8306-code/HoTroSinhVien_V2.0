@@ -156,4 +156,12 @@ public class AdminDiemController {
                 new ResponseObject("ok", "Update score successfully", diemMapper.entityToDto(savedDiem))
         );
     }
+
+    @GetMapping("/student/diemSV/{maSv}")
+    ResponseEntity<?> diemSV(@PathVariable String maSv)
+    {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new ResponseObject("ok","Query score summary successfully",diemService.diemSVDTOS(maSv))
+        );
+    }
 }
