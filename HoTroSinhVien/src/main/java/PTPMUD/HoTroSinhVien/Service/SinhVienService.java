@@ -1,9 +1,13 @@
 package PTPMUD.HoTroSinhVien.Service;
 
+import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Entity.TaiKhoan;
+import PTPMUD.HoTroSinhVien.Entity.ThoiKhoaBieu;
+import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
 import PTPMUD.HoTroSinhVien.Repository.TaiKhoanRepository;
+import PTPMUD.HoTroSinhVien.Repository.ThoiKhoaBieuRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +29,9 @@ public class SinhVienService {
     PasswordEncoder passwordEncoder;
     SinhVienRepository sinhVienRepository;
     TaiKhoanRepository taiKhoanRepository;
+    private final DangKyLopHocPhanService dangKyLopHocPhanService;
+    private final DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
+    private final ThoiKhoaBieuRepository thoiKhoaBieuRepository;
 
     @Transactional
     public SinhVien createSinhVien(SinhVien sinhVien) {
@@ -306,6 +314,30 @@ public class SinhVienService {
         }
 
         return errors;
+    }
+    @Transactional
+    public void delete(String maSv) {
+
+        SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
+
+        if (sinhVien == null) {
+            throw new RuntimeException("Sinh viên không tồn tại");
+        }
+
+        List<DangKyLopHocPhan> dangKyList =
+                dangKyLopHocPhanRepository.findBySinhVien_MaSv(maSv);
+
+        dangKyLopHocPhanRepository.deleteAll(dangKyList);
+
+        List<ThoiKhoaBieu> thoiKhoaBieus =
+                thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv);
+
+        thoiKhoaBieuRepository.deleteAll(thoiKhoaBieus);
+
+        taiKhoanRepository.findByUsername(maSv)
+                .ifPresent(taiKhoanRepository::delete);
+
+        sinhVienRepository.delete(sinhVien);
     }
 }
 

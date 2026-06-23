@@ -13,5 +13,6 @@ public interface LopHocPhanRepository extends JpaRepository<LopHocPhan,Integer> 
     List<LopHocPhan> findByHocKyAndMonHoc_TenMonHoc(int hocKy,String tenMonHoc);
     @Query("SELECT MAX(l.hocKy) FROM LopHocPhan l")
     Integer findMaxHocKy();
+    List<LopHocPhan> findByMaLopHPIn(List<String> maLopHPs);
     List<LopHocPhan> findByNgayBatDauAfterAndKhoaAndNganhAndMonHoc_MaMon(LocalDate ngay,String khoa,String nganh,String mamMon);
 }

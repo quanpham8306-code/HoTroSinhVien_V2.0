@@ -2,13 +2,20 @@ package PTPMUD.HoTroSinhVien.Controller.Admin;
 
 import PTPMUD.HoTroSinhVien.DTO.Request.CreateSinhVienDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
+import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
+import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
 import PTPMUD.HoTroSinhVien.Mapper.SinhVienMapper;
+import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
+import PTPMUD.HoTroSinhVien.Repository.LopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
+import PTPMUD.HoTroSinhVien.Service.DangKyLopHocPhanService;
+import PTPMUD.HoTroSinhVien.Service.LopHocPhanService;
 import PTPMUD.HoTroSinhVien.Service.SinhVienService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.math3.analysis.function.Sinh;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +32,10 @@ public class AdminSinhVienController {
     SinhVienRepository SinhVienRepository;
     SinhVienService SinhVienService;
     SinhVienMapper sinhVienMapper;
+    private final DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
+    private final DangKyLopHocPhanService dangKyLopHocPhanService;
+    private final LopHocPhanService lopHocPhanService;
+    private final LopHocPhanRepository lopHocPhanRepository;
 
     @GetMapping()
     List<SinhVien> getAllStudent(){
@@ -73,4 +84,38 @@ public class AdminSinhVienController {
         SinhVienService.importExcelSinhVien(file);
         return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
     }
+
+    @PostMapping ("/importExcelSinhVienVaoLopHP/{maLopHP}")
+    ResponseEntity<?> importExcelSinhVienVaoLopHP(
+            @RequestParam ("danhSachSinhVienVaoLop") MultipartFile file,
+            @PathVariable String maLopHP )
+    {
+
+        try {
+            dangKyLopHocPhanService.nhapExcelListSinhVienVaoLopHP(file,maLopHP);
+            return ResponseEntity.status(HttpStatus.OK).body("Import excel danh sách sinh viên vào lớp  thành công");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping ("/themSinhVienVaoLop/{maSv}/{maLopHP}")
+    ResponseEntity<?> themSinhVienVaoLop(@PathVariable String maSv, @PathVariable String maLopHP)
+    {
+
+        try {
+            dangKyLopHocPhanService.themSinhVienVaoLopHP(maSv,maLopHP);
+            return ResponseEntity.status(HttpStatus.OK).body("Thêm sinh viên vào lớp thành công");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/delete/{maSv}")
+    ResponseEntity<?> delete(@PathVariable String maSv)
+    {
+        SinhVienService.delete(maSv);
+        return ResponseEntity.status(HttpStatus.OK).body("Delete thành công");
+    }
+
 }

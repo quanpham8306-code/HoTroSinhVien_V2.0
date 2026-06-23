@@ -25,8 +25,8 @@ public class LichAoService {
     LopHocPhanMapper lopHocPhanMapper;
 
     public CheckLichAoResponse checkThemLop(CheckLichAoRequest request) {
-        LopHocPhan lopMoi = findLopHocPhan(request.getNewLopId());
-        List<LopHocPhan> dsDaChon = findDanhSachLopDaChon(request.getSelectedLopIds());
+        LopHocPhan lopMoi = findLopHocPhan(request.getNewMaLop());
+        List<LopHocPhan> dsDaChon = findDanhSachLopDaChon(request.getSelectedMaLopHPs());
 
         LopHocPhan lopTrungMon = timLopTrungMon(dsDaChon, lopMoi);
         if (lopTrungMon != null) {
@@ -45,25 +45,28 @@ public class LichAoService {
         );
     }
 
-    private LopHocPhan findLopHocPhan(Integer idLopHP) {
-        if (idLopHP == null) {
-            throw new IllegalArgumentException("Thiếu id lớp học phần cần thêm");
+    private LopHocPhan findLopHocPhan(String maLopHP) {
+        if (maLopHP == null) {
+            throw new IllegalArgumentException("Thiếu mã lớp học phần cần thêm");
         }
-        return lopHocPhanRepository.findById(idLopHP)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần với id: " + idLopHP));
+        LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
+
+        if(lopHocPhan==null)
+            throw new RuntimeException("Không tìm thấy lớp học phần với mã lớp: " + maLopHP);
+        return lopHocPhan;
     }
 
-    private List<LopHocPhan> findDanhSachLopDaChon(List<Integer> selectedLopIds) {
-        if (selectedLopIds == null || selectedLopIds.isEmpty()) {
+    private List<LopHocPhan> findDanhSachLopDaChon(List<String> selectedMaLopHPs) {
+        if (selectedMaLopHPs == null || selectedMaLopHPs.isEmpty()) {
             return Collections.emptyList();
         }
-        return lopHocPhanRepository.findAllById(selectedLopIds);
+        return lopHocPhanRepository.findByMaLopHPIn(selectedMaLopHPs);
     }
 
     private LopHocPhan timLopTrungMon(List<LopHocPhan> dsDaChon, LopHocPhan lopMoi) {
         return dsDaChon.stream()
-                .filter(lop -> lop.getIdLopHP() == lopMoi.getIdLopHP()
-                        || lop.getMonHoc().getIdMon() == lopMoi.getMonHoc().getIdMon())
+                .filter(lop -> lop.getMaLopHP().equalsIgnoreCase( lopMoi.getMaLopHP())
+                        || lop.getMonHoc().getMaMon().equalsIgnoreCase( lopMoi.getMonHoc().getMaMon()))
                 .findFirst()
                 .orElse(null);
     }

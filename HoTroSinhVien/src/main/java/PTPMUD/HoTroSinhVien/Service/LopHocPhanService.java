@@ -44,9 +44,9 @@ public class LopHocPhanService {
         return lopHocPhanRepository.save(lopHocPhan);
     }
 
-    public void importExcel(MultipartFile file){
+    public List<String> importExcel(MultipartFile file){
+        List <String> errors=new ArrayList<>();
         try{
-
             Workbook workbook = WorkbookFactory.create(file.getInputStream());
             Sheet sheet=workbook.getSheetAt(0);
             DataFormatter formatter = new DataFormatter();
@@ -59,38 +59,60 @@ public class LopHocPhanService {
                     try{
 
                         String tenMon = formatter.formatCellValue(row.getCell(0));
-                        int soTinChi = Integer.parseInt(formatter.formatCellValue(row.getCell(1)));
-                        String giangVien = formatter.formatCellValue(row.getCell(2));
-                        String phongHoc = formatter.formatCellValue(row.getCell(3));
-                        int thu = Integer.parseInt(formatter.formatCellValue(row.getCell(4)));
-                        LocalTime gioBatDau = LocalTime.parse(formatter.formatCellValue(row.getCell(5)));
-                        LocalTime gioKetThuc = LocalTime.parse(formatter.formatCellValue(row.getCell(6)));
-                        LocalDate ngayBatDau = LocalDate.parse(formatter.formatCellValue(row.getCell(7)));
-                        LocalDate ngayKetThuc = LocalDate.parse(formatter.formatCellValue(row.getCell(8)));
-                        int siSoToiDa = Integer.parseInt(formatter.formatCellValue(row.getCell(9)));
-                        int hocKy = Integer.parseInt(formatter.formatCellValue(row.getCell(10)));
-                        String khoa = formatter.formatCellValue(row.getCell(11));
-                        String nganh=formatter.formatCellValue(row.getCell(12));
+
+                        int soTinChi = Integer.parseInt(formatter.formatCellValue(row.getCell(1)).trim());
+                        if(soTinChi<=0) throw new RuntimeException("Số tín chỉ phải lớn hơn 0");
+
+                        String giangVien = formatter.formatCellValue(row.getCell(2)).trim();
+                        if(giangVien.isBlank()) throw new RuntimeException("Giảng viên không được để trống");
+
+                        String phongHoc = formatter.formatCellValue(row.getCell(3)).trim();
+
+                        int thu = Integer.parseInt(formatter.formatCellValue(row.getCell(4)).trim());
+                        if(thu<2 || thu>8) throw new RuntimeException("Thứ phải từ thứ 2 đến thứ 8");
+                        LocalTime gioBatDau = LocalTime.parse(formatter.formatCellValue(row.getCell(5)).trim());
+                        LocalTime gioKetThuc = LocalTime.parse(formatter.formatCellValue(row.getCell(6)).trim());
+                        if(!gioBatDau.isBefore(gioKetThuc)) throw new RuntimeException("Giờ bắt đầu phải nhỏ hơn giờ kết thức");
+
+                        LocalDate ngayBatDau = LocalDate.parse(formatter.formatCellValue(row.getCell(7)).trim());
+                        LocalDate ngayKetThuc = LocalDate.parse(formatter.formatCellValue(row.getCell(8)).trim());
+                        if(!ngayBatDau.isBefore(ngayKetThuc)) throw  new RuntimeException("Ngày bắt đầu phải nhỏ hơn nhày kết thúc");
+
+                        int siSoToiDa = Integer.parseInt(formatter.formatCellValue(row.getCell(9)).trim());
+                        if(siSoToiDa<=0) throw  new RuntimeException("Sĩ số tối đa phải lớn hơn 0");
+
+                        int hocKy = Integer.parseInt(formatter.formatCellValue(row.getCell(10)).trim());
+                        if(hocKy<1 || hocKy>2) throw new RuntimeException("Chỉ có học kỳ 1 hoặc học kỳ 2");
+
+                        String namHoc=formatter.formatCellValue(row.getCell(11)).trim();
+                        if (!namHoc.matches("\\d{4}-\\d{4}")) {
+                            throw new RuntimeException("Năm học phải có dạng 20XX-20XX");
+                        }
+
+                        String khoa = formatter.formatCellValue(row.getCell(12)).trim();
+
+                        String nganh=formatter.formatCellValue(row.getCell(13));
                         if(monHocRepository.findBytenMonHoc(tenMon) == null)
                         {
                             MonHoc mh = new MonHoc(soTinChi,tenMon);
                             monHocService.createMonHoc(mh);
                         }
                         LopHocPhan lopHocPhan= new LopHocPhan(giangVien,phongHoc,thu, gioBatDau,gioKetThuc,ngayBatDau
-                                ,ngayKetThuc,siSoToiDa,hocKy,khoa,monHocRepository.findBytenMonHoc(tenMon),nganh);
+                                ,ngayKetThuc,siSoToiDa,hocKy,khoa,monHocRepository.findBytenMonHoc(tenMon),nganh,namHoc);
                         createLPH(lopHocPhan,monHocRepository.findBytenMonHoc(tenMon).getIdMon());
 
                     }catch(Exception o) {
-                        System.out.println("Lỗi dòng " + (i + 1));
-                        o.printStackTrace();
+                        errors.add("Dòng " + (i + 1) + " lỗi: " + o.getMessage());
+
                     }
                 }
             }
-            workbook.close();
+
         }catch(Exception e)
         {
-            e.printStackTrace();
+           throw new RuntimeException("Không thể đọc file excel");
         }
+        return errors;
     }
 
 

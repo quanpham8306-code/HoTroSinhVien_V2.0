@@ -3,6 +3,7 @@ package PTPMUD.HoTroSinhVien.Controller.Student;
 import PTPMUD.HoTroSinhVien.DTO.Request.CheckLichAoRequest;
 import PTPMUD.HoTroSinhVien.DTO.Respone.CheckLichAoResponse;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
+import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
 import PTPMUD.HoTroSinhVien.Service.LichAoService;
 import PTPMUD.HoTroSinhVien.Service.LopHocPhanService;
@@ -43,6 +44,13 @@ public class StudentLichAoController {
             Authentication authentication
     ){
         String maSv=authentication.getName();
+
+        SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
+        if (sinhVien == null) {
+            return ResponseEntity.badRequest().body(
+                    new ResponseObject("failed", "Không tìm thấy sinh viên", null)
+            );
+        }
         return ResponseEntity.ok(
                 new ResponseObject(
                         "ok",

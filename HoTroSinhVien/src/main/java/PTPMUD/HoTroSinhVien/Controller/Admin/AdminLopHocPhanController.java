@@ -94,8 +94,14 @@ public class AdminLopHocPhanController {
     }
 
     @PostMapping("/importExcel")
-    ResponseEntity<?> importExcel(@RequestParam ("lichdangky")MultipartFile file){
-        lopHocPhanService.importExcel(file);
-        return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
+    ResponseEntity<?> importExcel(@RequestParam("lichDangKy") MultipartFile file) {
+
+        List<String> errors = lopHocPhanService.importExcel(file);
+        if (!errors.isEmpty()) {
+            return ResponseEntity.badRequest().body(errors);
+        }
+        return ResponseEntity.ok("Import thành công");
     }
+
+
 }

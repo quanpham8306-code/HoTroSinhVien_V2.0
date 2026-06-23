@@ -245,14 +245,19 @@ public class ThoiKhoaBieuService {
         Row row = sheet.createRow(rowIndex++);
         row.createCell(0).setCellValue(empty(thoiKhoaBieu.getLoaiLich()));
         row.createCell(1).setCellValue(empty(lop.getMaLopHP()));
-        row.createCell(2).setCellValue(lop.getMonHoc() == null ? "" : empty(lop.getMonHoc().getTenMonHoc()));
-        row.createCell(3).setCellValue(lop.getNgayBatDau() == null ? "" : lop.getNgayBatDau().toString());
-        row.createCell(4).setCellValue(lop.getNgayKetThuc() == null ? "" : lop.getNgayKetThuc().toString());
-        row.createCell(5).setCellValue((lop.getThu()));
-        row.createCell(6).setCellValue(lop.getGioBatDau() == null ? "" : lop.getGioBatDau().toString());
-        row.createCell(7).setCellValue(lop.getGioKetThuc() == null ? "" : lop.getGioKetThuc().toString());
-        row.createCell(8).setCellValue(empty(lop.getPhongHoc()));
-        row.createCell(9).setCellValue(empty(lop.getGiangVien()));
+        row.createCell(2).setCellValue(lop.getNganh() == null ? "" : lop.getNganh());
+        row.createCell(3).setCellValue(lop.getKhoa() == null ? "" : lop.getKhoa());
+        row.createCell(4).setCellValue(lop.getSiSoToiDa());
+        row.createCell(5).setCellValue(lop.getMonHoc() == null ? "" : empty(lop.getMonHoc().getTenMonHoc()));
+        row.createCell(6).setCellValue(lop.getNgayBatDau() == null ? "" : lop.getNgayBatDau().toString());
+        row.createCell(7).setCellValue(lop.getNgayKetThuc() == null ? "" : lop.getNgayKetThuc().toString());
+        row.createCell(8).setCellValue((lop.getThu()));
+        row.createCell(9).setCellValue(lop.getGioBatDau() == null ? "" : lop.getGioBatDau().toString());
+        row.createCell(10).setCellValue(lop.getGioKetThuc() == null ? "" : lop.getGioKetThuc().toString());
+        row.createCell(11).setCellValue(lop.getNamHoc() == null ? "" : lop.getNamHoc());
+        row.createCell(12).setCellValue(lop.getHocKy());
+        row.createCell(13).setCellValue(empty(lop.getPhongHoc()));
+        row.createCell(14).setCellValue(empty(lop.getGiangVien()));
         return rowIndex;
     }
 
@@ -310,8 +315,10 @@ public class ThoiKhoaBieuService {
                         String maLopHP = formatter.formatCellValue(row.getCell(1));
                         LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
                         thoiKhoaBieu.getLopHocPhan().add(lopHocPhan);
-                        DangKyLopHocPhan dangKyLopHocPhan = new DangKyLopHocPhan(sinhVien,lopHocPhan);
-                        dangKyRepository.save(dangKyLopHocPhan);
+                        if(!dangKyRepository.existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(sinhVien.getIdSv(), lopHocPhan.getIdLopHP())) {
+                            DangKyLopHocPhan dangKyLopHocPhan = new DangKyLopHocPhan(sinhVien,lopHocPhan);
+                            dangKyRepository.save(dangKyLopHocPhan);
+                        }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

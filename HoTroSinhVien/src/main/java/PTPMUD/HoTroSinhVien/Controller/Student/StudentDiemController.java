@@ -9,6 +9,7 @@ import PTPMUD.HoTroSinhVien.Entity.Diem;
 import PTPMUD.HoTroSinhVien.Mapper.BangDiemMapper;
 import PTPMUD.HoTroSinhVien.Mapper.DiemMapper;
 import PTPMUD.HoTroSinhVien.Repository.DiemRepository;
+import PTPMUD.HoTroSinhVien.Service.DangKyLopHocPhanService;
 import PTPMUD.HoTroSinhVien.Service.DiemService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class StudentDiemController {
 
     DiemRepository diemRepository;
     DiemService diemService;
+    private final DangKyLopHocPhanService dangKyLopHocPhanService;
 
     @GetMapping("/me")
     ResponseEntity<ResponseObject> getMyScore(Authentication authentication) {
@@ -49,15 +51,16 @@ public class StudentDiemController {
                 new ResponseObject("ok", "Query score successfully",result)
         );
     }
-    @GetMapping("/{ky}")
+    @GetMapping("/{ky}/{namHoc}")
     ResponseEntity<ResponseObject> getDiemByIdSv(
             Authentication authentication,
-            @PathVariable int ky
+            @PathVariable int ky,
+            @PathVariable String namHoc
         )
     {
         String maSv = authentication.getName();
 
-        List<Diem> diems = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_HocKy(maSv, ky);
+        List<Diem> diems = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_HocKyAndDangKyLopHocPhan_LopHocPhan_NamHoc(maSv,ky,namHoc);
         BangDiemTheoKy result =  diemService.entityToBangDiemTheoKy(diems);
 
         if (result == null) {
@@ -95,13 +98,14 @@ public class StudentDiemController {
         );
         }
     }
-    @GetMapping("/summary/{ky}")
+    @GetMapping("/summary/{namHoc}/{ky}")
     ResponseEntity<ResponseObject> getMyScoreSummary(
             Authentication authentication,
-            @PathVariable int ky)
+            @PathVariable int ky,
+            @PathVariable String namHoc)
     {
         String maSv = authentication.getName();
-        ScoreSummaryDTO scoreSummaryDTO = diemService.getSummaryByMaSvAndKy(maSv, ky);
+        ScoreSummaryDTO scoreSummaryDTO = diemService.getSummaryByMaSvAndNamHocAndKy(maSv,ky,namHoc);
         if(scoreSummaryDTO !=null ){
             return ResponseEntity.ok(
                     new ResponseObject(
@@ -119,5 +123,13 @@ public class StudentDiemController {
                             new ScoreSummaryDTO(0,0,0,"Chưa có.")
                     )
             );
+    }
+    @GetMapping ("/summary/listKyAndNam")
+            ResponseEntity<?> getListKyAndNamHoc(Authentication authentication)
+    {
+        String maSv=authentication.getName();
+        return ResponseEntity.status(HttpStatus.OK).body(
+                dangKyLopHocPhanService.listHocKyNamHocDTOS(maSv)
+        );
     }
 }
