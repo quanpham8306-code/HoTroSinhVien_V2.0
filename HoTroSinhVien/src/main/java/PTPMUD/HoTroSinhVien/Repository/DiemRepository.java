@@ -17,6 +17,10 @@ public interface DiemRepository extends JpaRepository<Diem, Integer> {
             String maSv,
             int hocKy
     );
+    List<Diem> findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_MaLopHP(
+            String maSv,
+            String maLopHP
+    );
     List<Diem> findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_HocKyAndDangKyLopHocPhan_LopHocPhan_NamHoc(
             String maSv,
             int hocKy,
@@ -24,5 +28,4 @@ public interface DiemRepository extends JpaRepository<Diem, Integer> {
     );
     List<Diem> findByDangKyLopHocPhan_SinhVien_MaSv(String maSv);
     Diem findByDangKyLopHocPhan(DangKyLopHocPhan dangKyHocPhan);
-
 }

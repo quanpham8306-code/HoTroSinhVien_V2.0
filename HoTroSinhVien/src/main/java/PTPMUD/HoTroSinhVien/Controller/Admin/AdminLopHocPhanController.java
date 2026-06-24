@@ -38,52 +38,64 @@ public class AdminLopHocPhanController {
         );
     }
 
-    @GetMapping("/{id}")
-    ResponseEntity<ResponseObject> getLopHP(@PathVariable int id) {
-        return lopHocPhanRepository.findById(id)
-                .map(lopHP -> ResponseEntity.ok(
-                        new ResponseObject("ok", "Query class successfully", lopHocPhanMapper.entityToDto(lopHP))
-                ))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                        new ResponseObject("failed", "Can not found class with id : " + id, "")
-                ));
+    @GetMapping("/{maLop}")
+    ResponseEntity<ResponseObject> getLopHP(@PathVariable String maLop) {
+        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLop);
+        return lopHocPhan != null ?
+                ResponseEntity.status(HttpStatus.OK).body(
+                        new ResponseObject("ok","Query class successfully",lopHocPhanMapper.entityToDto(lopHocPhan))
+                ):
+                ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                        new ResponseObject("false","Can not found class with ma mon : "+ maLop,"")
+                );
     }
 
     @PostMapping
     ResponseEntity<ResponseObject> insertLPH(@RequestBody LopHocPhanDTO request) {
         LopHocPhan newLPH = lopHocPhanMapper.dtoToEntity(request);
-        LopHocPhan savedLPH = lopHocPhanRepository.save(newLPH);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ResponseObject("ok", "Insert class successfully", lopHocPhanMapper.entityToDto(savedLPH))
-        );
+        if(lopHocPhanRepository.findByMaLopHP(request.getMaLopHP()) == null) {
+            lopHocPhanRepository.save(newLPH);
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                    new ResponseObject("ok", "Insert class successfully", lopHocPhanMapper.entityToDto(newLPH))
+            );
+        }
+        else
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                    new ResponseObject(
+                            "false",
+                            "class has exist",
+                            ""
+                    )
+            );
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{maLopHP}")
     ResponseEntity<ResponseObject> updateLopHocPhan(
-            @PathVariable int id,
+            @PathVariable String maLopHP,
             @RequestBody LopHocPhanDTO request
     ) {
-        return lopHocPhanRepository.findById(id)
-                .map(oldLPH -> {
-                    LopHocPhan newLPH = lopHocPhanMapper.dtoToEntity(request);
-                    lopHocPhanMapper.updateLPH(oldLPH, newLPH);
-                    LopHocPhan savedLPH = lopHocPhanRepository.save(oldLPH);
+        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
+        if(lopHocPhan != null) {
+            LopHocPhan newLPH = lopHocPhanMapper.dtoToEntity(request);
+            lopHocPhanMapper.updateLPH(lopHocPhan, newLPH);
+            LopHocPhan savedLPH = lopHocPhanRepository.save(lopHocPhan);
 
-                    return ResponseEntity.ok(
-                            new ResponseObject("ok", "Update class successfully", lopHocPhanMapper.entityToDto(savedLPH))
-                    );
-                })
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                        new ResponseObject("failed", "Can not found class with id : " + id, "")
-                ));
+            return ResponseEntity.ok(
+                    new ResponseObject("ok", "Update class successfully", lopHocPhanMapper.entityToDto(savedLPH))
+            );
+        }
+        else
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ResponseObject("failed", "Can not found class with ma lop : " +  maLopHP, "")
+            );
     }
 
-    @DeleteMapping("/{id}")
-    ResponseEntity<ResponseObject> deleteLopHP(@PathVariable int id) {
+    @DeleteMapping("/{maLop}")
+    ResponseEntity<ResponseObject> deleteLopHP(@PathVariable String maLopHP) {
+        int id = lopHocPhanRepository.findByMaLopHP(maLopHP).getIdLopHP();
         if (!lopHocPhanRepository.existsById(id)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ResponseObject("failed", "Can not found class with id : " + id, "")
+                    new ResponseObject("failed", "Can not found class with ma lop : " + maLopHP, "")
             );
         }
 

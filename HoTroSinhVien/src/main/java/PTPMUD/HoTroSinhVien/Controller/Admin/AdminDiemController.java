@@ -5,6 +5,7 @@ import PTPMUD.HoTroSinhVien.DTO.Respone.DiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
+import PTPMUD.HoTroSinhVien.Entity.MonHoc;
 import PTPMUD.HoTroSinhVien.Mapper.DiemMapper;
 import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.DiemRepository;
@@ -41,13 +42,13 @@ public class AdminDiemController {
         );
     }
 
-    @GetMapping("/student/{idSv}/class/{idLhp}")
+    @GetMapping("/{maSinhVien}/{maLop}")
     ResponseEntity<ResponseObject> getDiemByIdSvAndIdLop(
-            @PathVariable int idSv,
-            @PathVariable int idLhp
+            @PathVariable String maSinhVien,
+            @PathVariable String maLop
     ) {
         DangKyLopHocPhan dangKy = dangKyLopHocPhanRepository
-                .findBySinhVien_IdSvAndLopHocPhan_IdLopHP(idSv, idLhp);
+                .findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSinhVien, maLop);
 
         if (dangKy == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
@@ -68,16 +69,16 @@ public class AdminDiemController {
         );
     }
 
-    @GetMapping("/student/{idSv}")
-    ResponseEntity<ResponseObject> getDiemByIdSv(@PathVariable int idSv) {
-        List<DiemDTO> result = diemRepository.findByDangKyLopHocPhan_SinhVien_IdSv(idSv)
+    @GetMapping("/student/{maSv}")
+    ResponseEntity<ResponseObject> getDiemByIdSv(@PathVariable String maSv) {
+        List<DiemDTO> result = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSv(maSv)
                 .stream()
                 .map(diemMapper::entityToDto)
                 .toList();
 
         if (result.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ResponseObject("failed", "Can not found score of student with id : " + idSv, "")
+                    new ResponseObject("failed", "Can not found score of student with ma sinh vien : " + maSv, "")
             );
         }
 
@@ -86,25 +87,25 @@ public class AdminDiemController {
         );
     }
 
-    @GetMapping("/student/{idSv}/summary")
-    ResponseEntity<ResponseObject> getScoreSummary(@PathVariable int idSv) {
+    @GetMapping("/student/summary/{maSv}")
+    ResponseEntity<ResponseObject> getScoreSummary(@PathVariable String maSv) {
         return ResponseEntity.ok(
                 new ResponseObject(
                         "ok",
                         "Query score summary successfully",
-                        diemService.getSummaryByIdSv(idSv)
+                        diemService.getSummaryByMaSv(maSv)
                 )
         );
     }
 
-    @PostMapping("/student/{idSv}/class/{idLhp}")
+    @PostMapping("/{maSv}/{maLop}")
     ResponseEntity<ResponseObject> addDiem(
-            @PathVariable int idSv,
-            @PathVariable int idLhp,
+            @PathVariable String maSv,
+            @PathVariable String maLop,
             @RequestBody CreateDiemDTO request
     ) {
         DangKyLopHocPhan dangKy = dangKyLopHocPhanRepository
-                .findBySinhVien_IdSvAndLopHocPhan_IdLopHP(idSv, idLhp);
+                .findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv, maLop);
 
         if (dangKy == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
@@ -119,7 +120,7 @@ public class AdminDiemController {
             );
         }
 
-        Diem diem = diemService.dtoToEntity(idSv, idLhp, request);
+        Diem diem = diemService.dtoToEntity(maSv, maLop, request);
         Diem savedDiem = diemRepository.save(diem);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -127,14 +128,14 @@ public class AdminDiemController {
         );
     }
 
-    @PutMapping("/student/{idSv}/class/{idLhp}")
+    @PutMapping("/{maSv}/{maLop}")
     ResponseEntity<ResponseObject> updateDiem(
-            @PathVariable int idSv,
-            @PathVariable int idLhp,
+            @PathVariable String maSv,
+            @PathVariable String maLop,
             @RequestBody CreateDiemDTO request
     ) {
         DangKyLopHocPhan dangKy = dangKyLopHocPhanRepository
-                .findBySinhVien_IdSvAndLopHocPhan_IdLopHP(idSv, idLhp);
+                .findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv, maLop);
 
         if (dangKy == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
@@ -156,12 +157,21 @@ public class AdminDiemController {
                 new ResponseObject("ok", "Update score successfully", diemMapper.entityToDto(savedDiem))
         );
     }
-
-    @GetMapping("/student/diemSV/{maSv}")
-    ResponseEntity<?> diemSV(@PathVariable String maSv)
-    {
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new ResponseObject("ok","Query score summary successfully",diemService.diemSVDTOS(maSv))
-        );
+    @DeleteMapping("/{maSv}/{maLop}")
+    ResponseEntity<ResponseObject> deleteMonHoc(
+            @PathVariable String maSv,
+            @PathVariable String maLop
+    ) {
+        List<Diem> diems = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_MaLopHP(maSv,maLop);
+        if (diems != null) {
+            diemRepository.deleteAll(diems);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new ResponseObject("ok", "Delete Subject successfully", "")
+            );
+        }
+        else
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new ResponseObject("failed", "Cannot found Subject student in class : " + maLop, "")
+            );
     }
 }

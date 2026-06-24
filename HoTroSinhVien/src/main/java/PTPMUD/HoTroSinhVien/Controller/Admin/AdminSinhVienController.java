@@ -34,23 +34,22 @@ public class AdminSinhVienController {
     SinhVienMapper sinhVienMapper;
     private final DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
     private final DangKyLopHocPhanService dangKyLopHocPhanService;
-    private final LopHocPhanService lopHocPhanService;
-    private final LopHocPhanRepository lopHocPhanRepository;
 
     @GetMapping()
     List<SinhVien> getAllStudent(){
         return SinhVienRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    ResponseEntity<ResponseObject> getStudent(@PathVariable int id){
+    @GetMapping("/{maSv}")
+    ResponseEntity<ResponseObject> getStudent(@PathVariable String maSv){
+        int id = SinhVienRepository.findByMaSv(maSv).getIdSv();
         Optional<SinhVien> student = SinhVienRepository.findById(id);
         return student.isPresent() ?
                 ResponseEntity.status(HttpStatus.OK).body(
                         new ResponseObject("ok","Query student successfully",sinhVienMapper.entityToDto(student.get()))
                 ):
                 ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                        new ResponseObject("false","Can not found student with id : "+id,"")
+                        new ResponseObject("false","Can not found student with maSv : " + maSv,"")
                 );
     }
 
@@ -62,8 +61,9 @@ public class AdminSinhVienController {
         );
     }
 
-    @PutMapping("/{id}")
-    ResponseEntity<ResponseObject> updateStudent(@PathVariable int id, @RequestBody CreateSinhVienDTO newStudent){
+    @PutMapping("/{maSv}")
+    ResponseEntity<ResponseObject> updateStudent(@PathVariable String maSv, @RequestBody CreateSinhVienDTO newStudent){
+        int id = SinhVienRepository.findByMaSv(maSv).getIdSv();
         Optional<SinhVien> student = SinhVienRepository.findById(id);
         if(student.isPresent()){
             SinhVien oldStudent =  student.get();
@@ -75,7 +75,7 @@ public class AdminSinhVienController {
         }
         else
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ResponseObject("failed","Can not found student with id : " + id,"")
+                    new ResponseObject("failed","Can not found student with ma sv : " + maSv,"")
             );
     }
 

@@ -11,6 +11,10 @@ public interface DangKyLopHocPhanRepository extends JpaRepository<DangKyLopHocPh
                     int idSv,
                     int idLopHP
             );
+    DangKyLopHocPhan findBySinhVien_MaSvAndLopHocPhan_MaLopHP(
+            String maSv,
+            String maLopHP
+    );
     int countByLopHocPhan_IdLopHP(int idLopHP);
 
     boolean existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(int idSv, int idLopHP);

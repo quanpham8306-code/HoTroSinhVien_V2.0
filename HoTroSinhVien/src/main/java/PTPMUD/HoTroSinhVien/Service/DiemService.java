@@ -31,9 +31,8 @@ public class DiemService {
     DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
     private final SinhVienRepository sinhVienRepository;
 
-    public Diem dtoToEntity(Integer idSv, Integer idLhp, CreateDiemDTO dto) {
-        DangKyLopHocPhan dangKy = findDangKy(idSv, idLhp);
-
+    public Diem dtoToEntity(String maSv, String maLop, CreateDiemDTO dto) {
+        DangKyLopHocPhan dangKy = dangKyLopHocPhanRepository.findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv, maLop);
         Diem diem = new Diem();
         diem.setDangKyLopHocPhan(dangKy);
         updateDiemFromDto(diem, dto);

@@ -28,15 +28,15 @@ public class AdminMonHocController {
         return MonHocRepository.findAll();
     }
 
-    @GetMapping("/{id}")
-    ResponseEntity<ResponseObject> getMonHoc(@PathVariable int id){
-        Optional<MonHoc> monHoc = MonHocRepository.findById(id);
-        return monHoc.isPresent() ?
+    @GetMapping("/{maMonHoc}")
+    ResponseEntity<ResponseObject> getMonHoc(@PathVariable String maMonHoc){
+        MonHoc monHoc = MonHocRepository.findByMaMon(maMonHoc);
+        return monHoc != null ?
                 ResponseEntity.status(HttpStatus.OK).body(
-                        new ResponseObject("ok","Query Subject successfully",monHocMapper.entityToDto(monHoc.get()))
+                        new ResponseObject("ok","Query Subject successfully",monHocMapper.entityToDto(monHoc))
                 ):
                 ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                        new ResponseObject("false","Can not found Subject with id : "+id,"")
+                        new ResponseObject("false","Can not found Subject with ma mon : "+maMonHoc,"")
                 );
     }
 
@@ -55,26 +55,25 @@ public class AdminMonHocController {
             );
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{maMonHoc}")
     ResponseEntity<ResponseObject> updateMonhoc(
-            @PathVariable int id,
+            @PathVariable String maMonHoc,
             @RequestBody MonHocDTO monHocDTO
     ) {
-        Optional<MonHoc> monHoc = MonHocRepository.findById(id);
+        MonHoc monHoc = MonHocRepository.findByMaMon(maMonHoc);
 
-        if (monHoc.isEmpty()) {
+        if (monHoc == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new ResponseObject(
                             "failed",
-                            "Can not find subject with id : " + id,
+                            "Can not find subject with ma mon : " + maMonHoc,
                             ""
                     )
             );
         }
 
-        MonHoc oldMonHoc = monHoc.get();
-        monHocMapper.updateMonHoc(oldMonHoc, monHocDTO);
-        MonHoc savedMonHoc = MonHocRepository.save(oldMonHoc);
+        monHocMapper.updateMonHoc(monHoc, monHocDTO);
+        MonHoc savedMonHoc = MonHocRepository.save(monHoc);
 
         return ResponseEntity.status(HttpStatus.OK).body(
                 new ResponseObject(
@@ -85,18 +84,18 @@ public class AdminMonHocController {
         );
     }
 
-    @DeleteMapping("/{id}")
-    ResponseEntity<ResponseObject> deleteMonHoc(@PathVariable int id) {
-        boolean exists = MonHocRepository.existsById(id);
-        if (exists) {
-            MonHocRepository.deleteById(id);
+    @DeleteMapping("/{maMonHoc}")
+    ResponseEntity<ResponseObject> deleteMonHoc(@PathVariable String maMonHoc) {
+        MonHoc monHoc = MonHocRepository.findByMaMon(maMonHoc);
+        if (monHoc != null) {
+            MonHocRepository.deleteById(monHoc.getIdMon());
             return ResponseEntity.status(HttpStatus.OK).body(
                     new ResponseObject("ok", "Delete Subject successfully", "")
             );
         }
         else
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ResponseObject("failed", "Cannot found Subject student with id : " + id, "")
+                    new ResponseObject("failed", "Cannot found Subject student with ma mon : " + maMonHoc, "")
             );
     }
 }
