@@ -1,6 +1,8 @@
 package PTPMUD.HoTroSinhVien.Controller.Admin;
 
 import PTPMUD.HoTroSinhVien.DTO.Request.CreateSinhVienDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.MonHocDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.SinhVienDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
@@ -32,12 +34,15 @@ public class AdminSinhVienController {
     SinhVienRepository SinhVienRepository;
     SinhVienService SinhVienService;
     SinhVienMapper sinhVienMapper;
-    private final DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
     private final DangKyLopHocPhanService dangKyLopHocPhanService;
 
     @GetMapping()
-    List<SinhVien> getAllStudent(){
-        return SinhVienRepository.findAll();
+    List<SinhVienDTO> getAllMonHoc(){
+        List<SinhVienDTO> result = SinhVienRepository.findAll()
+                .stream()
+                .map(sinhVienMapper::entityToDto)
+                .toList();
+        return result;
     }
 
     @GetMapping("/{maSv}")
