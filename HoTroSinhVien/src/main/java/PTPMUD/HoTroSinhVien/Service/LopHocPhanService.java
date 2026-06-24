@@ -36,14 +36,26 @@ public class LopHocPhanService {
 
         int soLopHienCo = lopHocPhanRepository.countByMonHoc_IdMon(idMonHoc);
 
-        String maLopHP = monHoc.getTenMonHoc() +lopHocPhan.getKhoa()+ "-N" + String.format("%02d", soLopHienCo + 1);
+        String maLopHP = vietTat(monHoc.getTenMonHoc()) + "-"+ lopHocPhan.getKhoa()+ "-L" + String.format("%02d", soLopHienCo + 1);
 
         lopHocPhan.setMaLopHP(maLopHP);
         lopHocPhan.setMonHoc(monHoc);
 
         return lopHocPhanRepository.save(lopHocPhan);
     }
+    public String vietTat(String text) {
+        if (text == null || text.isBlank()) {
+            return "";
+        }
 
+        StringBuilder result = new StringBuilder();
+
+        for (String word : text.trim().split("\\s+")) {
+            result.append(Character.toUpperCase(word.charAt(0)));
+        }
+
+        return result.toString();
+    }
     public List<String> importExcel(MultipartFile file){
         List <String> errors=new ArrayList<>();
         try{
