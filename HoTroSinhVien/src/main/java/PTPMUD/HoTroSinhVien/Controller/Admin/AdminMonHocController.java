@@ -1,5 +1,6 @@
 package PTPMUD.HoTroSinhVien.Controller.Admin;
 
+import PTPMUD.HoTroSinhVien.DTO.Respone.DiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.MonHocDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.MonHoc;
@@ -24,8 +25,12 @@ public class AdminMonHocController {
     MonHocMapper monHocMapper;
 
     @GetMapping()
-    List<MonHoc> getAllMonHoc(){
-        return MonHocRepository.findAll();
+    List<MonHocDTO> getAllMonHoc(){
+        List<MonHocDTO> result = MonHocRepository.findAll()
+                .stream()
+                .map(monHocMapper::entityToDto)
+                .toList();
+        return result;
     }
 
     @GetMapping("/{maMonHoc}")
