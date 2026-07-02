@@ -1,9 +1,7 @@
 package PTPMUD.HoTroSinhVien.Controller.Admin;
 
 import PTPMUD.HoTroSinhVien.DTO.Request.CreateSinhVienDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
-import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
@@ -23,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +32,6 @@ public class AdminSinhVienController {
     SinhVienRepository SinhVienRepository;
     SinhVienService SinhVienService;
     SinhVienMapper sinhVienMapper;
-
     private final DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
     private final DangKyLopHocPhanService dangKyLopHocPhanService;
 
@@ -56,7 +52,6 @@ public class AdminSinhVienController {
                         new ResponseObject("false","Can not found student with maSv : " + maSv,"")
                 );
     }
-
 
     @PostMapping()
     ResponseEntity<ResponseObject> insertStudent(@RequestBody CreateSinhVienDTO sinhVien){
@@ -90,11 +85,33 @@ public class AdminSinhVienController {
         return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
     }
 
+    @PostMapping ("/importExcelSinhVienVaoLopHP/{maLopHP}")
+    ResponseEntity<?> importExcelSinhVienVaoLopHP(
+            @RequestParam ("danhSachSinhVienVaoLop") MultipartFile file,
+            @PathVariable String maLopHP )
+    {
 
+        try {
+            dangKyLopHocPhanService.nhapExcelListSinhVienVaoLopHP(file,maLopHP);
+            return ResponseEntity.status(HttpStatus.OK).body("Import excel danh sách sinh viên vào lớp  thành công");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
+    @PostMapping ("/themSinhVienVaoLop/{maSv}/{maLopHP}")
+    ResponseEntity<?> themSinhVienVaoLop(@PathVariable String maSv, @PathVariable String maLopHP)
+    {
 
+        try {
+            dangKyLopHocPhanService.themSinhVienVaoLopHP(maSv,maLopHP);
+            return ResponseEntity.status(HttpStatus.OK).body("Thêm sinh viên vào lớp thành công");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
-    @DeleteMapping ("/delete/{maSv}")
+    @PostMapping("/delete/{maSv}")
     ResponseEntity<?> delete(@PathVariable String maSv)
     {
         SinhVienService.delete(maSv);
