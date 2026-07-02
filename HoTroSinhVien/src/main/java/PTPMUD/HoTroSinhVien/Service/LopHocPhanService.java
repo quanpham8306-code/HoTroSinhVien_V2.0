@@ -2,13 +2,10 @@ package PTPMUD.HoTroSinhVien.Service;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.pickedClassDTO;
-import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
-import PTPMUD.HoTroSinhVien.Entity.MonHoc;
-import PTPMUD.HoTroSinhVien.Entity.SinhVien;
+import PTPMUD.HoTroSinhVien.Entity.*;
 import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
 import PTPMUD.HoTroSinhVien.Mapper.MonHocMapper;
-import PTPMUD.HoTroSinhVien.Repository.LopHocPhanRepository;
-import PTPMUD.HoTroSinhVien.Repository.MonHocRepository;
+import PTPMUD.HoTroSinhVien.Repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,6 +26,9 @@ public class LopHocPhanService {
     MonHocRepository monHocRepository;
     private final MonHocService monHocService;
     private final LopHocPhanMapper lopHocPhanMapper;
+    DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
+    ChiTietThoiKhoaBieuRepository chiTietThoiKhoaBieuRepository;
+    DiemRepository diemRepository;
 
     public LopHocPhan createLPH(LopHocPhan lopHocPhan, int idMonHoc){
         MonHoc monHoc = monHocRepository.findById(idMonHoc)
@@ -138,5 +138,24 @@ public class LopHocPhanService {
             lopHocPhanDTOList.add(lopHocPhanDTO);
         }
         return new pickedClassDTO(maMon,lopHocPhanDTOList);
+    }
+
+    public void delete(String maLopHP)
+    {
+            LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
+            if(lopHocPhan==null)
+                throw  new RuntimeException("Không tồn tại lớp học phần này");
+            List<DangKyLopHocPhan> dangKyLopHocPhanList=dangKyLopHocPhanRepository.findByLopHocPhan_MaLopHP(maLopHP);
+            for(DangKyLopHocPhan dangKyLopHocPhan : dangKyLopHocPhanList)
+            {
+                Diem diems=diemRepository.findByDangKyLopHocPhan(dangKyLopHocPhan);
+                diemRepository.delete(diems);
+                List<ChiTietThoiKhoaBieu> chiTietThoiKhoaBieuList= chiTietThoiKhoaBieuRepository.findByLopHocPhan(lopHocPhan);
+                for(ChiTietThoiKhoaBieu chiTietThoiKhoaBieu: chiTietThoiKhoaBieuList)
+                    chiTietThoiKhoaBieuRepository.delete(chiTietThoiKhoaBieu);
+                dangKyLopHocPhanRepository.delete(dangKyLopHocPhan);
+                lopHocPhanRepository.delete(lopHocPhan) ;
+            }
+
     }
 }

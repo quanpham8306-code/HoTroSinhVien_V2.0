@@ -19,6 +19,12 @@ public interface DangKyLopHocPhanRepository extends JpaRepository<DangKyLopHocPh
 
     boolean existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(int idSv, int idLopHP);
 
+    boolean existsBySinhVien_MaSvAndLopHocPhan_MaLopHP(String maSv,String maLopHP);
+
+    boolean existsByLopHocPhan_MaLopHP(String maLopHP);
+
+    List<DangKyLopHocPhan> findByLopHocPhan_MaLopHP(String maLopHP);
+
     List<DangKyLopHocPhan> findBySinhVien_IdSv(int idSv);
 
     List<DangKyLopHocPhan> findBySinhVien_MaSvAndLopHocPhan_HocKy(String maSv, int hocKy);

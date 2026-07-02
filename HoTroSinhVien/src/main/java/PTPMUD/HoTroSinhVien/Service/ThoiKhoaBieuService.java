@@ -2,16 +2,10 @@ package PTPMUD.HoTroSinhVien.Service;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.ThoiKhoaBieuDTO;
-import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
-import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
-import PTPMUD.HoTroSinhVien.Entity.SinhVien;
-import PTPMUD.HoTroSinhVien.Entity.ThoiKhoaBieu;
+import PTPMUD.HoTroSinhVien.Entity.*;
 import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
 import PTPMUD.HoTroSinhVien.Mapper.ThoiKhoaBieuMapper;
-import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
-import PTPMUD.HoTroSinhVien.Repository.LopHocPhanRepository;
-import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
-import PTPMUD.HoTroSinhVien.Repository.ThoiKhoaBieuRepository;
+import PTPMUD.HoTroSinhVien.Repository.*;
 import PTPMUD.HoTroSinhVien.Util.LichHocValidator;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -42,12 +36,13 @@ public class ThoiKhoaBieuService {
     LopHocPhanRepository lopHocPhanRepository;
     ThoiKhoaBieuMapper thoiKhoaBieuMapper;
     LopHocPhanMapper lopHocPhanMapper;
+    ChiTietThoiKhoaBieuRepository chiTietThoiKhoaBieuRepository;
 
     @Transactional(readOnly = true)
     public List<ThoiKhoaBieuDTO> getAllSchedule() {
         return thoiKhoaBieuRepository.findAll()
                 .stream()
-                .map(thoiKhoaBieuMapper::entityToDto)
+                .map(this::entityToDTO)
                 .toList();
     }
 
@@ -55,7 +50,7 @@ public class ThoiKhoaBieuService {
     public List<ThoiKhoaBieuDTO> getScheduleByIdSv(int idSv) {
         return thoiKhoaBieuRepository.findBySinhVien_IdSv(idSv)
                 .stream()
-                .map(thoiKhoaBieuMapper::entityToDto)
+                .map(this::entityToDTO)
                 .toList();
     }
 
@@ -63,8 +58,21 @@ public class ThoiKhoaBieuService {
     public List<ThoiKhoaBieuDTO> getScheduleByMaSv(String maSv) {
         return thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv)
                 .stream()
-                .map(thoiKhoaBieuMapper::entityToDto)
+                .map(this::entityToDTO)
                 .toList();
+    }
+
+    private ThoiKhoaBieuDTO entityToDTO(ThoiKhoaBieu thoiKhoaBieu) {
+        List<LopHocPhan> lopHocPhanList =
+                chiTietThoiKhoaBieuRepository.findByThoiKhoaBieu(thoiKhoaBieu)
+                        .stream()
+                        .map(ChiTietThoiKhoaBieu::getLopHocPhan)
+                        .toList();
+
+        return ThoiKhoaBieuDTO.builder()
+                .loaiLich(thoiKhoaBieu.getLoaiLich())
+                .lopHocPhanDTOList(lopHocPhanMapper.entityToDTO(lopHocPhanList))
+                .build();
     }
 
     @Transactional
@@ -76,64 +84,83 @@ public class ThoiKhoaBieuService {
             throw new IllegalArgumentException("Sinh viên chưa đăng ký lớp học phần nào");
         }
 
+        List<LopHocPhan> lopHocPhanList = danhSachDangKy.stream()
+                .map(DangKyLopHocPhan::getLopHocPhan)
+                .toList();
+
+        validateKhongTrungLich(lopHocPhanList);
+
         ThoiKhoaBieu thoiKhoaBieu = new ThoiKhoaBieu();
         thoiKhoaBieu.setSinhVien(sinhVien);
         thoiKhoaBieu.setLoaiLich(ThoiKhoaBieu.CHINH_THUC);
+        thoiKhoaBieu = thoiKhoaBieuRepository.save(thoiKhoaBieu);
 
-        danhSachDangKy.stream()
-                .map(DangKyLopHocPhan::getLopHocPhan)
-                .forEach(lop -> addLopHocPhan(thoiKhoaBieu, lop));
-
-        validateKhongTrungLich(thoiKhoaBieu);
+        for(LopHocPhan lopHocPhan:lopHocPhanList)
+            chiTietThoiKhoaBieuRepository.save(new ChiTietThoiKhoaBieu(thoiKhoaBieu,lopHocPhan));
         return thoiKhoaBieuRepository.save(thoiKhoaBieu);
     }
 
     @Transactional
-    public ThoiKhoaBieuDTO createThoiKhoaBieu(int idSv, ThoiKhoaBieuDTO dto) {
-        ThoiKhoaBieu thoiKhoaBieu = convertToEntity(idSv, dto);
-        validateKhongTrungLich(thoiKhoaBieu);
-        return thoiKhoaBieuMapper.entityToDto(thoiKhoaBieuRepository.save(thoiKhoaBieu));
+    public ThoiKhoaBieuDTO createThoiKhoaBieu(int idSv, ThoiKhoaBieuDTO thoiKhoaBieuDTO) {
+        SinhVien sinhVien=findSinhVien(idSv);
+        List<LopHocPhan> lopHocPhanList=convertToEntity(thoiKhoaBieuDTO);
+        validateKhongTrungLich(lopHocPhanList);
+
+        ThoiKhoaBieu thoiKhoaBieu=new ThoiKhoaBieu();
+        thoiKhoaBieu.setSinhVien(sinhVien);
+        thoiKhoaBieu.setLoaiLich(resolveLoaiLich(thoiKhoaBieuDTO.getLoaiLich()));
+        thoiKhoaBieu=thoiKhoaBieuRepository.save(thoiKhoaBieu);
+
+        for(LopHocPhan lopHocPhan:lopHocPhanList)
+            chiTietThoiKhoaBieuRepository.save(new ChiTietThoiKhoaBieu(thoiKhoaBieu,lopHocPhan));
+        return thoiKhoaBieuMapper.entityToDto(thoiKhoaBieu);
+    }
+
+    private List<LopHocPhan> convertToEntity(ThoiKhoaBieuDTO thoiKhoaBieuDTO) {
+        validateRequest(thoiKhoaBieuDTO);
+
+        return  thoiKhoaBieuDTO.getLopHocPhanDTOList()
+                .stream()
+                .map(this::findLopHocPhan)
+                .toList();
     }
 
     @Transactional
     public ThoiKhoaBieuDTO updateThoiKhoaBieu(int idTkb, ThoiKhoaBieuDTO dto) {
         ThoiKhoaBieu oldSchedule = findThoiKhoaBieu(idTkb);
-        ThoiKhoaBieu newSchedule = convertToEntity(oldSchedule.getSinhVien().getIdSv(), dto);
 
-        validateKhongTrungLich(newSchedule);
-
-        oldSchedule.setLoaiLich(newSchedule.getLoaiLich());
-
-        thoiKhoaBieuMapper.updateThoiKhoaBieu(oldSchedule,new ThoiKhoaBieu());
-
-        return thoiKhoaBieuMapper.entityToDto(thoiKhoaBieuRepository.save(oldSchedule));
-    }
-
-    @Transactional
-    public void deleteThoiKhoaBieu(int idTkb) {
-        if (!thoiKhoaBieuRepository.existsById(idTkb)) {
-            throw new RuntimeException("Không tìm thấy thời khóa biểu với id: " + idTkb);
-        }
-        thoiKhoaBieuRepository.deleteById(idTkb);
-    }
-
-    public ThoiKhoaBieu convertToEntity(int idSv, ThoiKhoaBieuDTO dto) {
-        validateRequest(dto);
-
-        ThoiKhoaBieu thoiKhoaBieu = new ThoiKhoaBieu();
-        thoiKhoaBieu.setSinhVien(findSinhVien(idSv));
-        thoiKhoaBieu.setLoaiLich(resolveLoaiLich(dto.getLoaiLich()));
-
-        dto.getLopHocPhanDTOList().stream()
+        List<LopHocPhan> lopHocPhanList = dto.getLopHocPhanDTOList()
+                .stream()
                 .map(this::findLopHocPhan)
-                .forEach(lop -> addLopHocPhan(thoiKhoaBieu, lop));
+                .toList();
 
-        return thoiKhoaBieu;
+        validateKhongTrungLich(lopHocPhanList);
+
+        oldSchedule.setLoaiLich(resolveLoaiLich(dto.getLoaiLich()));
+
+        thoiKhoaBieuRepository.save(oldSchedule);
+
+        chiTietThoiKhoaBieuRepository.deleteByThoiKhoaBieu(oldSchedule);
+
+        for (LopHocPhan lopHocPhan : lopHocPhanList) {
+            ChiTietThoiKhoaBieu chiTiet =
+                    new ChiTietThoiKhoaBieu(oldSchedule, lopHocPhan);
+
+            chiTietThoiKhoaBieuRepository.save(chiTiet);
+        }
+
+        return thoiKhoaBieuMapper.entityToDto(oldSchedule);
     }
 
-    public boolean isTrungLich(ThoiKhoaBieu thoiKhoaBieu) {
-        return findLopTrungLich(thoiKhoaBieu) != null;
+
+
+    private void validateKhongTrungLich(List<LopHocPhan> lopHocPhanList) {
+        LopHocPhan lopTrung = findLopTrungLich(lopHocPhanList);
+        if (lopTrung != null) {
+            throw new IllegalArgumentException("Các lớp học phần trong thời khóa biểu bị trùng lịch");
+        }
     }
+
     public ThoiKhoaBieuDTO getScheduleByKy(String maSv, int hocKy)
     {
         ThoiKhoaBieuDTO dto = new ThoiKhoaBieuDTO();
@@ -195,22 +222,12 @@ public class ThoiKhoaBieuService {
         return loaiLich == null || loaiLich.isBlank() ? ThoiKhoaBieu.LICH_AO : loaiLich;
     }
 
-    private void addLopHocPhan(ThoiKhoaBieu thoiKhoaBieu, LopHocPhan lopHocPhan) {
-        thoiKhoaBieu.getLopHocPhan().add(lopHocPhan);
-    }
+    private LopHocPhan findLopTrungLich(List<LopHocPhan> lopHocPhanList) {
 
-    private void validateKhongTrungLich(ThoiKhoaBieu thoiKhoaBieu) {
-        LopHocPhan lopTrung = findLopTrungLich(thoiKhoaBieu);
-        if (lopTrung != null) {
-            throw new IllegalArgumentException("Các lớp học phần trong thời khóa biểu bị trùng lịch");
-        }
-    }
-
-    private LopHocPhan findLopTrungLich(ThoiKhoaBieu thoiKhoaBieu) {
-
-        List<LopHocPhan> lopHocPhans=thoiKhoaBieu.getLopHocPhan();
-        for (int i = 0; i < lopHocPhans.size(); i++) {
-            LopHocPhan lopTrung = LichHocValidator.timLopBiTrung(lopHocPhans.subList(i + 1, lopHocPhans.size()), lopHocPhans.get(i));
+        for (int i = 0; i < lopHocPhanList.size(); i++) {
+            LopHocPhan lopTrung = LichHocValidator.timLopBiTrung(
+                    lopHocPhanList.subList(i + 1, lopHocPhanList.size()),
+                    lopHocPhanList.get(i));
             if (lopTrung != null) {
                 return lopTrung;
             }
@@ -233,11 +250,22 @@ public class ThoiKhoaBieuService {
     private void fillData(Sheet sheet,String maSv) {
         int rowIndex = 1;
 
-        for (ThoiKhoaBieu thoiKhoaBieu : thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv))
-            if(thoiKhoaBieu.getLoaiLich().equalsIgnoreCase("LICH_AO")) {
-                for (LopHocPhan lopHocPhan : thoiKhoaBieu.getLopHocPhan())
-                    rowIndex = writeRow(sheet, rowIndex, thoiKhoaBieu, lopHocPhan);
+        for (ThoiKhoaBieu thoiKhoaBieu : thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv)) {
+            if (thoiKhoaBieu.getLoaiLich().equalsIgnoreCase("LICH_AO")) {
+
+                List<ChiTietThoiKhoaBieu> chiTietList =
+                        chiTietThoiKhoaBieuRepository.findByThoiKhoaBieu(thoiKhoaBieu);
+
+                for (ChiTietThoiKhoaBieu chiTiet : chiTietList) {
+                    rowIndex = writeRow(
+                            sheet,
+                            rowIndex,
+                            thoiKhoaBieu,
+                            chiTiet.getLopHocPhan()
+                    );
+                }
             }
+        }
 
     }
 
@@ -295,39 +323,57 @@ public class ThoiKhoaBieuService {
                 && !lhp.getNgayKetThuc().isBefore(weekStart);
     }
 
-    public void nhapExcelThoiKhoaBieu(MultipartFile file,String maSv) throws Exception{
+    @Transactional
+    public void nhapExcelThoiKhoaBieu(MultipartFile file, String maSv) throws Exception {
 
-        try {
-            Workbook workbook = WorkbookFactory.create(file.getInputStream());
-            Sheet sheet = workbook.getSheetAt(0);
-            DataFormatter formatter = new DataFormatter();
-            SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
-            ThoiKhoaBieu thoiKhoaBieu=new ThoiKhoaBieu("CHINH_THUC");
-            thoiKhoaBieu.setSinhVien(sinhVien);
-            for(int i=1;i<=sheet.getLastRowNum();i++)
-            {
+        Workbook workbook = WorkbookFactory.create(file.getInputStream());
+        Sheet sheet = workbook.getSheetAt(0);
+        DataFormatter formatter = new DataFormatter();
 
-                Row row=sheet.getRow(i);
-                if(row==null) continue;
-                else {
-
-                    try {
-                        String maLopHP = formatter.formatCellValue(row.getCell(1));
-                        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
-                        thoiKhoaBieu.getLopHocPhan().add(lopHocPhan);
-                        if(!dangKyRepository.existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(sinhVien.getIdSv(), lopHocPhan.getIdLopHP())) {
-                            DangKyLopHocPhan dangKyLopHocPhan = new DangKyLopHocPhan(sinhVien,lopHocPhan);
-                            dangKyRepository.save(dangKyLopHocPhan);
-                        }
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+        SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
+        if (sinhVien == null) {
+            throw new RuntimeException("Không tìm thấy sinh viên");
         }
 
+        ThoiKhoaBieu thoiKhoaBieu = new ThoiKhoaBieu("CHINH_THUC");
+        thoiKhoaBieu.setSinhVien(sinhVien);
+        thoiKhoaBieu = thoiKhoaBieuRepository.save(thoiKhoaBieu);
+
+        List<LopHocPhan> lopHocPhanList = new ArrayList<>();
+
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+
+            String maLopHP = formatter.formatCellValue(row.getCell(1));
+            if (maLopHP == null || maLopHP.isBlank()) continue;
+
+            LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
+
+            if (lopHocPhan == null) {
+                throw new RuntimeException("Không tìm thấy lớp học phần: " + maLopHP);
+            }
+
+            lopHocPhanList.add(lopHocPhan);
+        }
+
+        validateKhongTrungLich(lopHocPhanList);
+
+        for (LopHocPhan lopHocPhan : lopHocPhanList) {
+            chiTietThoiKhoaBieuRepository.save(
+                    new ChiTietThoiKhoaBieu(thoiKhoaBieu, lopHocPhan)
+            );
+
+            if (!dangKyRepository.existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(
+                    sinhVien.getIdSv(),
+                    lopHocPhan.getIdLopHP()
+            )) {
+                DangKyLopHocPhan dangKy =
+                        new DangKyLopHocPhan(sinhVien, lopHocPhan);
+
+                dangKyRepository.save(dangKy);
+            }
+        }
     }
 
 }

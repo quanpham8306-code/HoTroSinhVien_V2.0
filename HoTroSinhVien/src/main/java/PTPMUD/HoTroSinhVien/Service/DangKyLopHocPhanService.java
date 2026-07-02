@@ -34,17 +34,17 @@ public class DangKyLopHocPhanService {
     private final LopHocPhanMapper lopHocPhanMapper;
 
     @Transactional
-    public DangKyLopHocPhan dangKyLopHocPhan(int idSv, int idLopHP) {
-        SinhVien sinhVien = findSinhVien(idSv);
-        LopHocPhan lopMoi = findLopHocPhan(idLopHP);
+    public DangKyLopHocPhan dangKyLopHocPhan(String maSv , String  maLopHP) {
+        SinhVien sinhVien = findSinhVien(maSv);
+        LopHocPhan lopMoi = findLopHocPhan(maLopHP);
 
-        validateDangKy(idSv, lopMoi);
+        validateDangKy(maSv, lopMoi);
 
         return dangKyRepository.save(new DangKyLopHocPhan(sinhVien, lopMoi));
     }
 
-    private void validateDangKy(int idSv, LopHocPhan lopMoi) {
-        if (dangKyRepository.existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(idSv, lopMoi.getIdLopHP())) {
+    private void validateDangKy(String maSv, LopHocPhan lopMoi) {
+        if (dangKyRepository.existsBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv, lopMoi.getMaLopHP())) {
             throw new IllegalArgumentException("Sinh viên đã đăng ký lớp này");
         }
 
@@ -52,7 +52,7 @@ public class DangKyLopHocPhanService {
             throw new IllegalArgumentException("Lớp học phần đã đủ sĩ số");
         }
 
-        List<LopHocPhan> dsLopDaDangKy = dangKyRepository.findBySinhVien_IdSv(idSv)
+        List<LopHocPhan> dsLopDaDangKy = dangKyRepository.findBySinhVien_MaSv(maSv)
                 .stream()
                 .map(DangKyLopHocPhan::getLopHocPhan)
                 .toList();
@@ -77,14 +77,34 @@ public class DangKyLopHocPhanService {
         }
     }
 
-    private SinhVien findSinhVien(int idSv) {
-        return sinhVienRepository.findById(idSv)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sinh viên với id: " + idSv));
+    private SinhVien findSinhVien(String maSv) {
+        SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
+
+        if (sinhVien == null) {
+            throw new RuntimeException("Không tìm thấy sinh viên với mã: " + maSv);
+        }
+
+        return sinhVien;
     }
 
-    private LopHocPhan findLopHocPhan(int idLopHP) {
-        return lopHocPhanRepository.findById(idLopHP)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy lớp học phần với id: " + idLopHP));
+    private LopHocPhan findLopHocPhan(String maLopHP) {
+        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
+
+        if (lopHocPhan == null) {
+            throw new RuntimeException("Không tìm thấy lớp học phần với mã: " + maLopHP);
+        }
+
+        return lopHocPhan;
+    }
+
+    private boolean check_cung_nganh(String maSv,String maLopHP){
+
+        SinhVien sinhVien=sinhVienRepository.findByMaSv(maSv);
+        LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
+        if(sinhVien.getNganh().equalsIgnoreCase(lopHocPhan.getNganh()))
+            return true;
+        else
+            return false;
     }
 
     public List<BuoiHoc> baBuoiGanNhat(String maSv) {
@@ -125,9 +145,10 @@ public class DangKyLopHocPhanService {
         return lichHocKyNamHocDTOS;
     }
 
-    public void nhapExcelListSinhVienVaoLopHP(MultipartFile file,String maLopHP)
+    public List<String > nhapExcelListSinhVienVaoLopHP(MultipartFile file,String maLopHP)
     {
         LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
+        List<String> error=new ArrayList<>();
         if(lopHocPhan==null){
             throw new RuntimeException("Lớp học phần không tồn tại");
         }
@@ -159,27 +180,48 @@ public class DangKyLopHocPhanService {
         } catch (IOException e) {
             throw new RuntimeException("Không thể đọc file excel",e);
         }
+        return error;
     }
 
     public void themSinhVienVaoLopHP(String maSv,String maLopHp)
-    { SinhVien sinhVien=sinhVienRepository.findByMaSv(maSv);
-        if(!sinhVienRepository.existsByMaSv(maSv));
-
+    {
+        SinhVien sinhVien=sinhVienRepository.findByMaSv(maSv);
         if (sinhVien == null) {
-            throw new RuntimeException("Mã sinh viên không tồn tại");
+            throw new RuntimeException("Mã sinh viên tồn tại");
         }
         LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHp);
-        {
-            System.out.println("Mã sinh viên không tồn tại");
-        }
         if (lopHocPhan == null) {
             throw new RuntimeException("Mã lớp học phần không tồn tại");
         }
+
+        if(check_cung_nganh(maSv,maLopHp)==false)
+            throw  new RuntimeException("Sinh viên không thể vào lớp học phần do khác ngành học");
+
+        validateDangKy(sinhVien.getMaSv(),lopHocPhan);
+
         if(dangKyRepository.existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(sinhVien.getIdSv(), lopHocPhan.getIdLopHP()))
             throw new RuntimeException("Sinh viên đã có trong lớp");
+
+        List<LopHocPhan> lopHocPhans = dangKyRepository.findBySinhVien_MaSv(maSv)
+                .stream()
+                .map(DangKyLopHocPhan::getLopHocPhan)
+                .toList();
+        validateKhongTrungMon(lopHocPhans,lopHocPhan);
+        validateKhongTrungLich(lopHocPhans,lopHocPhan);
+
         DangKyLopHocPhan dangKyLopHocPhan = new DangKyLopHocPhan(sinhVien, lopHocPhan);
         dangKyRepository.save(dangKyLopHocPhan);
+        }
 
+        public void xoaLopHPOfSinhVien(String maSv,String maLopHP)
+        {
+            SinhVien sinhVien= sinhVienRepository.findByMaSv(maSv);
+            findSinhVien(maSv);
+            LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
+            findLopHocPhan(maLopHP);
+            if(!dangKyRepository.existsBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHP))
+                throw  new RuntimeException("Sinh viên có mã sinh viên "+maSv+ " không có trong lớp học phần "+maLopHP);
+            dangKyRepository.delete(dangKyRepository.findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHP));
         }
 
 }

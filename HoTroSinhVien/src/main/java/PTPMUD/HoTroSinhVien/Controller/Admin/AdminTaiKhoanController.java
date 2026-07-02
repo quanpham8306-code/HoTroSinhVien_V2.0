@@ -1,14 +1,17 @@
 package PTPMUD.HoTroSinhVien.Controller.Admin;
 
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
+import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Entity.TaiKhoan;
 import PTPMUD.HoTroSinhVien.Mapper.TaiKhoanMapper;
 import PTPMUD.HoTroSinhVien.Repository.TaiKhoanRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.math3.analysis.function.Sinh;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -112,4 +115,12 @@ public class AdminTaiKhoanController {
                 new ResponseObject("ok", "Delete account successfully", "")
         );
     }
+
+    @PutMapping("/reset-passwword")
+    ResponseEntity<ResponseObject> resetPassword(Authentication authentication){
+        TaiKhoan taiKhoan= taiKhoanRepository.findBySinhVien_MaSv(authentication.getName());
+        taiKhoan.setPassword("1");
+        return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
 }

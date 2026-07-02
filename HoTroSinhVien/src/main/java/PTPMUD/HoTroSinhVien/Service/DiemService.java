@@ -3,11 +3,10 @@ package PTPMUD.HoTroSinhVien.Service;
 import PTPMUD.HoTroSinhVien.DTO.Request.CreateDiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemTheoKy;
-import PTPMUD.HoTroSinhVien.DTO.Respone.DiemSVDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.DiemAdminDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.ScoreSummaryDTO;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
-import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.DiemRepository;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
@@ -59,23 +58,23 @@ public class DiemService {
         return dtos;
     }
 
-    public List<DiemSVDTO> diemSVDTOS(String maSv)
+    public List<DiemAdminDTO> diemSVDTOS(String maSv)
     {
         if(sinhVienRepository.findByMaSv(maSv)==null)
             throw  new RuntimeException("Không tồn tại sinh viên này");
         List<Diem> diems=diemRepository.findByDangKyLopHocPhan_SinhVien_MaSv(maSv);
-        List<DiemSVDTO> diemSVDTOS=new ArrayList<>();
+        List<DiemAdminDTO> diemAdminDTOS =new ArrayList<>();
         for(Diem diem:diems){
-            DiemSVDTO diemSVDTO=new DiemSVDTO();
-            diemSVDTO.setMaSv(maSv);
-            diemSVDTO.setMon(diem.getDangKyLopHocPhan().getLopHocPhan().getMonHoc().getTenMonHoc());
-            diemSVDTO.setDiemHocPhan(diem.getDiemHocPhan());
-            diemSVDTO.setDiemQuaTrinh(diem.getDiemQuaTrinh());
-            diemSVDTO.setDiemCuoiKy(diem.getDiemCuoiKy());
-            diemSVDTO.setTrangThai(diem.getTrangThai());
-            diemSVDTOS.add(diemSVDTO);
+            DiemAdminDTO diemAdminDTO =new DiemAdminDTO();
+            diemAdminDTO.setMaSv(maSv);
+            diemAdminDTO.setMon(diem.getDangKyLopHocPhan().getLopHocPhan().getMonHoc().getTenMonHoc());
+            diemAdminDTO.setDiemHocPhan(diem.getDiemHocPhan());
+            diemAdminDTO.setDiemQuaTrinh(diem.getDiemQuaTrinh());
+            diemAdminDTO.setDiemCuoiKy(diem.getDiemCuoiKy());
+            diemAdminDTO.setTrangThai(diem.getTrangThai());
+            diemAdminDTOS.add(diemAdminDTO);
         }
-        return diemSVDTOS;
+        return diemAdminDTOS;
     }
     @Transactional(readOnly = true)
     public ScoreSummaryDTO getSummaryByIdSv(int idSv) {

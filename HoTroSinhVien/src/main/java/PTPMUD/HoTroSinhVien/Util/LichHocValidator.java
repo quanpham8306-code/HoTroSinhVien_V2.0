@@ -13,9 +13,9 @@ public final class LichHocValidator {
         if (a == null || b == null) {
             return false;
         }
-        if (a.getThu() == b.getThu()) {
-            return false;
-        }
+//        if (a.getThu() == b.getThu()) {
+//            return false;
+//        }
         if (a.getGioBatDau() == null || a.getGioKetThuc() == null
                 || b.getGioBatDau() == null || b.getGioKetThuc() == null) {
             return false;

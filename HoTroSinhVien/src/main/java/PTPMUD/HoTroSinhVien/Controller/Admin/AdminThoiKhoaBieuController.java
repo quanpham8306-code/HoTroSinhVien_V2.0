@@ -33,14 +33,13 @@ public class AdminThoiKhoaBieuController {
         );
     }
 
-    @GetMapping("/student/{maSV}")
-    ResponseEntity<ResponseObject> getScheduleByIdSv(@PathVariable String maSV) {
-        int id = sinhVienRepository.findByMaSv(maSV).getIdSv();
+    @GetMapping("/student/{maSv}")
+    ResponseEntity<ResponseObject> getScheduleByMaSV(@PathVariable String maSv) {
         return ResponseEntity.ok(
                 new ResponseObject(
                         "ok",
                         "Query schedule successfully",
-                        thoiKhoaBieuService.getScheduleByIdSv(id)
+                        thoiKhoaBieuService.getScheduleByMaSv(maSv)
                 )
         );
     }
@@ -59,4 +58,5 @@ public class AdminThoiKhoaBieuController {
                 )
         );
     }
+
 }

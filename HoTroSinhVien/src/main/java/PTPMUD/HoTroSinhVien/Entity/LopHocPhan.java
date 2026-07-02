@@ -44,6 +44,7 @@ public class LopHocPhan {
     @Column(nullable = true)
     private String khoa;
     private String namHoc;
+    @Column(nullable = false,columnDefinition = "NVARCHAR(100)")
     private String nganh;
     @ManyToOne
     @JoinColumn(name = "idMon")

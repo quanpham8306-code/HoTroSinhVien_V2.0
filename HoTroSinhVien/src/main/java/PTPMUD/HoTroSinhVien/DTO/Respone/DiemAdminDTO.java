@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DiemSVDTO {
+public class DiemAdminDTO {
     String maSv;
     String maLopHP;
     private String mon;

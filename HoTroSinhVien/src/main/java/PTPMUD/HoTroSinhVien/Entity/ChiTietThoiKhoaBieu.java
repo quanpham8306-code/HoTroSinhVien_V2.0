@@ -11,21 +11,21 @@ import lombok.Setter;
 @Setter
 @Data
 @NoArgsConstructor
-public class DangKyLopHocPhan {
+public class ChiTietThoiKhoaBieu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int idDangKy;
+    private int idChiTietThoiKhoaBieu;
 
     @ManyToOne
-    @JoinColumn(name = "idSv")
-    private SinhVien sinhVien;
+    @JoinColumn(name = "idTKB")
+    private ThoiKhoaBieu thoiKhoaBieu;
 
     @ManyToOne
     @JoinColumn(name = "idLopHP")
     private LopHocPhan lopHocPhan;
 
-    public DangKyLopHocPhan(SinhVien sinhVien, LopHocPhan lopHocPhan) {
-        this.sinhVien = sinhVien;
+    public ChiTietThoiKhoaBieu(ThoiKhoaBieu thoiKhoaBieu, LopHocPhan lopHocPhan) {
+        this.thoiKhoaBieu = thoiKhoaBieu;
         this.lopHocPhan = lopHocPhan;
     }
 }
