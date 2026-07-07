@@ -17,13 +17,15 @@ public class Note {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    @Column(unique = true)
+    @Column(columnDefinition = "NVARCHAR(100)" )
     @Convert(converter = StringCryptoConverter.class)
     private String title;
     private LocalDate date;
     @Convert(converter = StringCryptoConverter.class)
+    @Column(columnDefinition = "NVARCHAR(100)" )
     private String tag;
     @Convert(converter = StringCryptoConverter.class)
+    @Column(columnDefinition = "NVARCHAR(2000)" )
     private String note;
     @ManyToOne
     @JoinColumn(name = "idSv")

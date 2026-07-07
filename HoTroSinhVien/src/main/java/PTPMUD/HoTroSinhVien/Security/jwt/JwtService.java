@@ -22,7 +22,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtService {
-    static String privateKey = "105eef18a75e9f1275c04c9d1aa9aab807b7dade0d26d97fa43219a5741b1f2a";
+    static String privateKey = System.getenv("APP_PRIVATE_KEY");
     public String createToken(TaiKhoan taiKhoan) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
