@@ -1,5 +1,6 @@
 package PTPMUD.HoTroSinhVien.DTO.Respone;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public class LopHocPhanDTO {
     private LocalTime gioBatDau;
 
     private LocalTime gioKetThuc;
+
 
     private LocalDate ngayBatDau;
 

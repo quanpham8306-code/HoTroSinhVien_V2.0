@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Entity
 @Getter
 @Setter
@@ -17,7 +20,7 @@ public class Diem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int idDiem;
     @OneToOne
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "idDangKy")
     private DangKyLopHocPhan dangKyLopHocPhan;
     @Min(0)
     @Max(10)
@@ -45,10 +48,14 @@ public class Diem {
         setTrangThai();
     }
     private void tinhDiemHocPhan() {
-        this.diemHocPhan = diemCuoiKy*0.7+diemHocPhan*0.3;
+        double diem = diemCuoiKy * 0.7f + diemQuaTrinh * 0.3f;
+
+        this.diemHocPhan = BigDecimal.valueOf(diem)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue();
     }
     private void setTrangThai(){
-        if(diemHocPhan < 4)
+        if(diemHocPhan >= 4)
             this.trangThai = "Đạt";
         else
             this.trangThai = "Không đạt";

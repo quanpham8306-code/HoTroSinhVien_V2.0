@@ -13,6 +13,9 @@ public interface LopHocPhanMapper {
     LopHocPhan dtoToEntity(LopHocPhanDTO dto);
     @Mapping(source = "monHoc.tenMonHoc", target = "tenMonHoc")
     LopHocPhanDTO entityToDto(LopHocPhan lopHocPhan);
-    void updateLPH(@MappingTarget LopHocPhan oldLPH, LopHocPhan newLPH);
+    @Mapping(target = "idLopHP", ignore = true)
+    @Mapping(target = "maLopHP", ignore = true)
+    @Mapping(target = "monHoc", ignore = true)
+    void updateLPH(@MappingTarget LopHocPhan oldLPH, LopHocPhanDTO lopHocPhanDTO);
     List<LopHocPhanDTO> entityToDTO(List<LopHocPhan> lph);
 }

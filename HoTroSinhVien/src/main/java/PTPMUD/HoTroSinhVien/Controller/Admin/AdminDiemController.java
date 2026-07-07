@@ -17,7 +17,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOException;
 import java.util.List;
 
 @RestController
@@ -44,7 +46,7 @@ public class AdminDiemController {
     }
 
     @GetMapping("/{maSinhVien}/{maLop}")
-    ResponseEntity<ResponseObject> getDiemByIdSvAndIdLop(
+    ResponseEntity<ResponseObject> getDiemByMaSvAndMaLop(
             @PathVariable String maSinhVien,
             @PathVariable String maLop
     ) {
@@ -188,5 +190,28 @@ public class AdminDiemController {
             );
     }
 
+    @PostMapping("/importExcel")
+    public ResponseEntity<ResponseObject> importExcelDiem(
+            @RequestParam("danhSachDiem") MultipartFile file) throws Exception {
 
+        List<String> errors = diemService.importExcelDiem(file);
+
+        if (errors.isEmpty()) {
+            return ResponseEntity.ok(
+                    new ResponseObject(
+                            "ok",
+                            "Import Excel điểm thành công",
+                            null
+                    )
+            );
+        }
+
+        return ResponseEntity.badRequest().body(
+                new ResponseObject(
+                        "failed",
+                        "Import Excel thất bại",
+                        errors
+                )
+        );
+    }
 }

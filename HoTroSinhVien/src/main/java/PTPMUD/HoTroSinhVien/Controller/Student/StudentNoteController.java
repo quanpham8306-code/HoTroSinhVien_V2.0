@@ -10,6 +10,8 @@ import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Mapper.NoteMapper;
 import PTPMUD.HoTroSinhVien.Repository.NoteRepository;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
+import PTPMUD.HoTroSinhVien.Security.crypto.StringCryptoConverter;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,6 +27,7 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping(path = "/api/student/note")
 public class StudentNoteController {
+
     NoteRepository noteRepository;
     NoteMapper noteMapper;
     SinhVienRepository sinhVienRepository;
@@ -58,22 +61,26 @@ public class StudentNoteController {
             Authentication authentication,
             @RequestBody NoteRequest noteRequest
     ){
-        if(noteRepository.findByTitleAndSinhVien_MaSv(noteRequest.getTitle(),authentication.getName())!=null){
+        Note oldNote = noteRepository.findByTitleAndSinhVien_MaSv(noteRequest.getTitle(),authentication.getName());
+
+        if(oldNote != null){
             return ResponseEntity.status(HttpStatus.CONFLICT).body(
                     new ResponseObject("false","Note already exists.","")
             );
         }
-        Note note = noteMapper.dtoToEntity(noteRequest);
-        SinhVien sinhVien = sinhVienRepository.findByMaSv(authentication.getName());
-        note.setSinhVien(sinhVien);
-        noteRepository.save(note);
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new ResponseObject(
-                        "ok",
-                        "Note added successfully.",
-                        ""
-                )
-        );
+        else {
+            Note note = noteMapper.dtoToEntity(noteRequest);
+            SinhVien sinhVien = sinhVienRepository.findByMaSv(authentication.getName());
+            note.setSinhVien(sinhVien);
+            noteRepository.save(note);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new ResponseObject(
+                            "ok",
+                            "Note added successfully.",
+                            ""
+                    )
+            );
+        }
     }
 
 
@@ -82,40 +89,45 @@ public class StudentNoteController {
             Authentication authentication,
             @RequestBody NoteRequest noteRequest
     ) {
-        if(noteRepository.findByTitleAndSinhVien_MaSv(noteRequest.getTitle(),authentication.getName())==null){
+        Note oldNote = noteRepository.findByTitleAndSinhVien_MaSv(noteRequest.getTitle(),authentication.getName());
+        if(oldNote==null){
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new ResponseObject("false","Note not exists.","")
             );
         }
-        Note oldNote = noteRepository.findByTitleAndSinhVien_MaSv(noteRequest.getTitle(),authentication.getName());
-        noteMapper.updateNote(oldNote,noteRequest);
-        noteRepository.save(oldNote);
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new ResponseObject(
-                        "ok",
-                        "Note already update",
-                        ""
-                )
-        );
+        else {
+            noteMapper.updateNote(oldNote, noteRequest);
+            noteRepository.save(oldNote);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new ResponseObject(
+                            "ok",
+                            "Note already update",
+                            ""
+                    )
+            );
+        }
     }
     @DeleteMapping("/delete")
+    @Transactional
     ResponseEntity<ResponseObject> deleteNote(
             Authentication authentication,
             @RequestBody NoteRequest noteRequest
     ){
-        if(noteRepository.findByTitleAndSinhVien_MaSv(noteRequest.getTitle(),authentication.getName())==null){
+        Note oldNote = noteRepository.findById(noteRequest.getId());
+        if(oldNote==null){
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
                     new ResponseObject("false","Note not exists.","")
             );
         }
-        Note oldNote = noteRepository.findByTitleAndSinhVien_MaSv(noteRequest.getTitle(),authentication.getName());
-        noteRepository.delete(oldNote);
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new ResponseObject(
-                        "ok",
-                        "Note delete successfully",
-                        ""
-                )
-        );
+        else {
+            noteRepository.delete(oldNote);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new ResponseObject(
+                            "ok",
+                            "Note delete successfully",
+                            ""
+                    )
+            );
+        }
     }
 }

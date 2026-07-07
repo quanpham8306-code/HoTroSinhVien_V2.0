@@ -8,4 +8,6 @@ import java.util.List;
 public interface NoteRepository extends JpaRepository<Note, Integer> {
     Note findByTitleAndSinhVien_MaSv(String  title, String maSv );
     List<Note> findBySinhVien_MaSv(String MaSv);
+    Note findById(int id);
+    Note findByTitle(String title);
 }

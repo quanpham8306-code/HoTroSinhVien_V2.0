@@ -11,7 +11,10 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class ThoiKhoaBieuDTO {
-    private String loaiLich; // CHINH_THUC, LICH_AO
+
+    private int ky;
+
+    private String namHoc;
 
     @Builder.Default
     private List<LopHocPhanDTO> lopHocPhanDTOList = new ArrayList<>();

@@ -5,10 +5,10 @@ import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.*;
 import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
-import PTPMUD.HoTroSinhVien.Repository.ChiTietThoiKhoaBieuRepository;
 import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.DiemRepository;
 import PTPMUD.HoTroSinhVien.Repository.LopHocPhanRepository;
+import PTPMUD.HoTroSinhVien.Repository.MonHocRepository;
 import PTPMUD.HoTroSinhVien.Service.DangKyLopHocPhanService;
 import PTPMUD.HoTroSinhVien.Service.LopHocPhanService;
 import lombok.AccessLevel;
@@ -33,8 +33,9 @@ public class AdminLopHocPhanController {
     LopHocPhanMapper lopHocPhanMapper;
     DangKyLopHocPhanService dangKyLopHocPhanService;
     DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
+    MonHocRepository monHocRepository;
     DiemRepository diemRepository;
-    ChiTietThoiKhoaBieuRepository chiTietThoiKhoaBieuRepository;
+
     @GetMapping
     ResponseEntity<ResponseObject> getAllLopHP() {
         List<LopHocPhanDTO> result = lopHocPhanRepository.findAll()
@@ -77,18 +78,18 @@ public class AdminLopHocPhanController {
     @PostMapping
     ResponseEntity<ResponseObject> insertLPH(@RequestBody LopHocPhanDTO request) {
         LopHocPhan newLPH = lopHocPhanMapper.dtoToEntity(request);
+        MonHoc monHoc=monHocRepository.findBytenMonHoc(request.getTenMonHoc());
         if(lopHocPhanRepository.findByMaLopHP(request.getMaLopHP()) == null) {
-            lopHocPhanRepository.save(newLPH);
             return ResponseEntity.status(HttpStatus.CREATED).body(
-                    new ResponseObject("ok", "Insert class successfully", lopHocPhanMapper.entityToDto(newLPH))
+                    new ResponseObject("ok", lopHocPhanService.taoLHP(newLPH,request.getTenMonHoc()), "")
             );
         }
         else
             return ResponseEntity.status(HttpStatus.CONFLICT).body(
                     new ResponseObject(
                             "false",
-                            "class has exist",
-                            ""
+                            "Lớp học đã tồn tại",
+                            "Lớp học đã tồn tại"
                     )
             );
     }
@@ -99,44 +100,29 @@ public class AdminLopHocPhanController {
             @RequestBody LopHocPhanDTO request
     ) {
         LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
-        if(lopHocPhan != null) {
-            LopHocPhan newLPH = lopHocPhanMapper.dtoToEntity(request);
-            lopHocPhanMapper.updateLPH(lopHocPhan, newLPH);
-            LopHocPhan savedLPH = lopHocPhanRepository.save(lopHocPhan);
 
-            return ResponseEntity.ok(
-                    new ResponseObject("ok", "Update class successfully", lopHocPhanMapper.entityToDto(savedLPH))
-            );
-        }
-        else
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ResponseObject("failed", "Can not found class with ma lop : " +  maLopHP, "")
-            );
-    }
-
-    @DeleteMapping("/{maLop}")
-    ResponseEntity<ResponseObject> deleteLopHP(@PathVariable String maLopHP) {
-        int id = lopHocPhanRepository.findByMaLopHP(maLopHP).getIdLopHP();
-        if (!lopHocPhanRepository.existsById(id)) {
+        if (lopHocPhan == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new ResponseObject("failed", "Can not found class with ma lop : " + maLopHP, "")
             );
         }
 
-        lopHocPhanRepository.deleteById(id);
+        lopHocPhanMapper.updateLPH(lopHocPhan,request);
+
+        LopHocPhan savedLPH = lopHocPhanRepository.save(lopHocPhan);
+
         return ResponseEntity.ok(
-                new ResponseObject("ok", "Delete class successfully", "")
+                new ResponseObject("ok", "Update class successfully", lopHocPhanMapper.entityToDto(savedLPH))
         );
     }
+
 
     @PostMapping("/importExcel")
     ResponseEntity<?> importExcel(@RequestParam("danhSachLop") MultipartFile file) {
 
         List<String> errors = lopHocPhanService.importExcel(file);
-        if (!errors.isEmpty()) {
-            return ResponseEntity.badRequest().body(errors);
-        }
-        return ResponseEntity.ok("Import thành công");
+
+        return ResponseEntity.ok().body(errors);
     }
 
     @PostMapping ("/add_student")
@@ -154,17 +140,31 @@ public class AdminLopHocPhanController {
         }
     }
 
-    @PostMapping ("/importExcelSinhVienVaoLopHP/{maLopHP}")
-    ResponseEntity<?> importExcelSinhVienVaoLopHP(
-            @RequestParam ("danhSachSinhVienVaoLop") MultipartFile file,
-            @PathVariable String maLopHP )
-    {
+    @PostMapping("/importExcelSinhVienVaoLopHP/{maLopHP}")
+    public ResponseEntity<ResponseObject> importExcelSinhVienVaoLopHP(
+            @RequestParam("danhSachSinhVienVaoLop") MultipartFile file,
+            @PathVariable String maLopHP) {
 
         try {
-            dangKyLopHocPhanService.nhapExcelListSinhVienVaoLopHP(file,maLopHP);
-            return ResponseEntity.status(HttpStatus.OK).body("Import excel danh sách sinh viên vào lớp  thành công");
+            List<String> errors =
+                    dangKyLopHocPhanService.nhapExcelListSinhVienVaoLopHP(file, maLopHP);
+
+            return ResponseEntity.ok(
+                    new ResponseObject(
+                            "ok",
+                            "Import excel danh sách sinh viên thành công",
+                            errors
+                    )
+            );
+
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(
+                    new ResponseObject(
+                            "false",
+                            e.getMessage(),
+                            null
+                    )
+            );
         }
     }
 
@@ -195,5 +195,21 @@ public class AdminLopHocPhanController {
           );
         }
 
+    }
+
+    @GetMapping ("/student/{maLopHP}")
+    ResponseEntity<ResponseObject> getStudentOfClass(@PathVariable String maLopHP)
+    {
+        LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
+        if(lopHocPhan==null)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    new ResponseObject("false","Không tồn tại lớp học phần này","")
+            );
+        else
+        {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new ResponseObject("ok","Hiện thị danh sách thành công",dangKyLopHocPhanService.xemSinhVienOfLop(maLopHP))
+            );
+        }
     }
 }

@@ -85,33 +85,8 @@ public class AdminSinhVienController {
         return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
     }
 
-    @PostMapping ("/importExcelSinhVienVaoLopHP/{maLopHP}")
-    ResponseEntity<?> importExcelSinhVienVaoLopHP(
-            @RequestParam ("danhSachSinhVienVaoLop") MultipartFile file,
-            @PathVariable String maLopHP )
-    {
 
-        try {
-            dangKyLopHocPhanService.nhapExcelListSinhVienVaoLopHP(file,maLopHP);
-            return ResponseEntity.status(HttpStatus.OK).body("Import excel danh sách sinh viên vào lớp  thành công");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PostMapping ("/themSinhVienVaoLop/{maSv}/{maLopHP}")
-    ResponseEntity<?> themSinhVienVaoLop(@PathVariable String maSv, @PathVariable String maLopHP)
-    {
-
-        try {
-            dangKyLopHocPhanService.themSinhVienVaoLopHP(maSv,maLopHP);
-            return ResponseEntity.status(HttpStatus.OK).body("Thêm sinh viên vào lớp thành công");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @PostMapping("/delete/{maSv}")
+    @DeleteMapping("/delete/{maSv}")
     ResponseEntity<?> delete(@PathVariable String maSv)
     {
         SinhVienService.delete(maSv);

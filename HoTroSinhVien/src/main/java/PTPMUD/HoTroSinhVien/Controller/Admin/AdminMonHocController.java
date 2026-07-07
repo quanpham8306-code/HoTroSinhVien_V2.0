@@ -6,6 +6,7 @@ import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
 import PTPMUD.HoTroSinhVien.Entity.MonHoc;
 import PTPMUD.HoTroSinhVien.Mapper.MonHocMapper;
 import PTPMUD.HoTroSinhVien.Repository.MonHocRepository;
+import PTPMUD.HoTroSinhVien.Service.MonHocService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -23,7 +24,7 @@ import java.util.Optional;
 public class AdminMonHocController {
     MonHocRepository MonHocRepository;
     MonHocMapper monHocMapper;
-
+    MonHocService monHocService;
     @GetMapping()
     List<MonHocDTO> getAllMonHoc(){
         List<MonHocDTO> result = MonHocRepository.findAll()
@@ -56,7 +57,7 @@ public class AdminMonHocController {
         }
         else
             return  ResponseEntity.status(HttpStatus.CREATED).body(
-                    new ResponseObject("ok","Insert student successfully",monHocMapper.entityToDto(MonHocRepository.save(newMonHoc)))
+                    new ResponseObject("ok","Insert student successfully",monHocMapper.entityToDto(monHocService.createMonHoc(newMonHoc)))
             );
     }
 

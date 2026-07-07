@@ -1,21 +1,19 @@
 package PTPMUD.HoTroSinhVien.Service;
 
 import PTPMUD.HoTroSinhVien.DTO.Request.CreateDiemDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemTheoKy;
-import PTPMUD.HoTroSinhVien.DTO.Respone.DiemAdminDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.ScoreSummaryDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.*;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.Diem;
-import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
-import PTPMUD.HoTroSinhVien.Repository.DiemRepository;
-import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
+import PTPMUD.HoTroSinhVien.Repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -29,6 +27,9 @@ public class DiemService {
     DiemRepository diemRepository;
     DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
     private final SinhVienRepository sinhVienRepository;
+    LopHocPhanRepository lopHocPhanRepository;
+    MonHocRepository monHocRepository;
+
 
     public Diem dtoToEntity(String maSv, String maLop, CreateDiemDTO dto) {
         DangKyLopHocPhan dangKy = dangKyLopHocPhanRepository.findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv, maLop);
@@ -37,12 +38,7 @@ public class DiemService {
         updateDiemFromDto(diem, dto);
         return diem;
     }
-    public BangDiemTheoKy entityToBangDiemTheoKy(List<Diem> diems) {
-       BangDiemTheoKy  bangDiemTheoKy = new BangDiemTheoKy();
-       bangDiemTheoKy.setBangDiemDTOS(entityToBangDiemDTO(diems));
-       bangDiemTheoKy.setHocKy(diems.getFirst().getDangKyLopHocPhan().getLopHocPhan().getHocKy());
-        return  bangDiemTheoKy;
-    }
+
     public List<BangDiemDTO> entityToBangDiemDTO(List<Diem> diems) {
         List<BangDiemDTO> dtos = new ArrayList<>();
         for (Diem diem : diems) {
@@ -67,6 +63,7 @@ public class DiemService {
         for(Diem diem:diems){
             DiemAdminDTO diemAdminDTO =new DiemAdminDTO();
             diemAdminDTO.setMaSv(maSv);
+            diemAdminDTO.setMaLopHP(diem.getDangKyLopHocPhan().getLopHocPhan().getMonHoc().getMaMon());
             diemAdminDTO.setMon(diem.getDangKyLopHocPhan().getLopHocPhan().getMonHoc().getTenMonHoc());
             diemAdminDTO.setDiemHocPhan(diem.getDiemHocPhan());
             diemAdminDTO.setDiemQuaTrinh(diem.getDiemQuaTrinh());
@@ -206,5 +203,98 @@ public class DiemService {
         diem.setDiemCuoiKy(dto.getDiemCuoiKy());
         diem.setDiemHocPhan(dto.getDiemHocPhan());
         diem.setTrangThai(dto.getTrangThai());
+    }
+
+    public List<String> importExcelDiem (MultipartFile file) throws IOException {
+        List<String> error = new ArrayList<>();
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+
+                Row row = sheet.getRow(i);
+
+                if (row == null) {
+                    continue;
+                }
+                try {
+                    String maSv =getStringCell(row,0,formatter);
+                    if (maSv.isBlank()) {
+                        throw new RuntimeException("Họ tên đang để trống");
+                    }
+                    if(sinhVienRepository.findByMaSv(maSv)==null)
+                        throw new RuntimeException("Không có sinh viên này với mã:"+maSv);
+                    String maLopHp=getStringCell(row,1,formatter);
+                    if(maLopHp.isBlank())
+                        throw new RuntimeException("Lớp học phần đang để trống");
+                    if(lopHocPhanRepository.findByMaLopHP(maLopHp)==null)
+                        throw new RuntimeException("Lớp học phần không tồn tại");
+                    String tenMon=getStringCell(row,2,formatter);
+                    if(monHocRepository.findBytenMonHoc(tenMon)==null)
+                        throw new RuntimeException("Môn học không tồn tai");
+                    if(!lopHocPhanRepository.existsByMonHoc_TenMonHoc(tenMon))
+                        throw new RuntimeException("Môn học này không có lớp học phần");
+                    if(!dangKyLopHocPhanRepository.existsBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHp))
+                        throw new RuntimeException("Sinh viên này chưa đăng ký lớp học phần này");
+                    int diemQuaTrinh=getIntCell(row,3,formatter);
+                    if(diemQuaTrinh>10 || diemQuaTrinh <0)
+                        throw new RuntimeException("Điểm quá trình chỉ được từ 0 đến 10");
+                    int diemCuoiKy=getIntCell(row,4,formatter);
+                    if(diemCuoiKy>10 || diemCuoiKy <0)
+                        throw new RuntimeException("Điểm cuối kỳ chỉ được từ 0 đến 10");
+                    if(diemRepository.findByDangKyLopHocPhan(dangKyLopHocPhanRepository.findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHp))!=null)
+                        throw new RuntimeException("Sinh viên đã có điểm lớp học phần này");
+                    DangKyLopHocPhan dangKyLopHocPhan=dangKyLopHocPhanRepository.findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHp);
+                    Diem diem=new Diem(dangKyLopHocPhan,diemQuaTrinh,diemCuoiKy);
+                    diemRepository.save(diem);
+                } catch (RuntimeException e) {
+                  error.add("Dòng "+(i+1)+" lỗi: "+e.getMessage());
+                }
+            }
+        }
+
+        return  error;
+    }
+
+    private String getStringCell(
+            Row row,
+            int index,
+            DataFormatter formatter) {
+
+        Cell cell = row.getCell(index);
+
+        if (cell == null) {
+            return "";
+        }
+
+        return formatter
+                .formatCellValue(cell)
+                .trim();
+    }
+    private int getIntCell(Row row, int cellIndex, DataFormatter formatter) {
+        Cell cell = row.getCell(cellIndex);
+
+        if (cell == null || cell.getCellType() == CellType.BLANK) {
+            throw new RuntimeException("Điểm đang để trống ở cột " + (cellIndex + 1));
+        }
+
+        try {
+            String value = formatter.formatCellValue(cell).trim();
+
+            if (value.isBlank()) {
+                throw new RuntimeException("Điểm đang để trống ở cột " + (cellIndex + 1));
+            }
+
+            if (value.endsWith(".0")) {
+                value = value.substring(0, value.length() - 2);
+            }
+
+            return Integer.parseInt(value);
+
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Dữ liệu số không hợp lệ ở cột " + (cellIndex + 1)
+            );
+        }
     }
 }

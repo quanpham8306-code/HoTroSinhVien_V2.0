@@ -1,7 +1,7 @@
 package PTPMUD.HoTroSinhVien.Controller.Student;
 
 import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.BangDiemTheoKy;
+
 import PTPMUD.HoTroSinhVien.DTO.Respone.DiemDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.ScoreSummaryDTO;
 import PTPMUD.HoTroSinhVien.DTO.ResponseObject;
@@ -32,6 +32,7 @@ public class StudentDiemController {
 
     DiemRepository diemRepository;
     DiemService diemService;
+    DiemMapper diemMapper;
     private final DangKyLopHocPhanService dangKyLopHocPhanService;
 
     @GetMapping("/me")
@@ -56,21 +57,22 @@ public class StudentDiemController {
             Authentication authentication,
             @PathVariable int ky,
             @PathVariable String namHoc
+
         )
     {
         String maSv = authentication.getName();
 
         List<Diem> diems = diemRepository.findByDangKyLopHocPhan_SinhVien_MaSvAndDangKyLopHocPhan_LopHocPhan_HocKyAndDangKyLopHocPhan_LopHocPhan_NamHoc(maSv,ky,namHoc);
-        BangDiemTheoKy result =  diemService.entityToBangDiemTheoKy(diems);
+        List<BangDiemDTO> bangDiemDTOS=diemMapper.entityDiemToBangDiemDTO(diems);
 
-        if (result == null) {
+        if (bangDiemDTOS == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                     new ResponseObject("failed", "Can not found score of student", "")
             );
         }
 
         return ResponseEntity.ok(
-                new ResponseObject("ok", "Query score successfully",result)
+                new ResponseObject("ok", "Query score successfully",bangDiemDTOS)
         );
     }
 
@@ -98,7 +100,7 @@ public class StudentDiemController {
         );
         }
     }
-    @GetMapping("/summary/{namHoc}/{ky}")
+    @GetMapping("/summary/{ky}/{namHoc}")
     ResponseEntity<ResponseObject> getMyScoreSummary(
             Authentication authentication,
             @PathVariable int ky,

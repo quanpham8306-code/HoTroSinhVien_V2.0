@@ -12,9 +12,11 @@ import org.apache.commons.math3.analysis.function.Sinh;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class AdminTaiKhoanController {
 
     TaiKhoanRepository taiKhoanRepository;
     TaiKhoanMapper taiKhoanMapper;
+    PasswordEncoder passwordEncoder;
 
     @GetMapping
     ResponseEntity<ResponseObject> getAllTaiKhoan() {
@@ -116,11 +119,22 @@ public class AdminTaiKhoanController {
         );
     }
 
-    @PutMapping("/reset-passwword")
-    ResponseEntity<ResponseObject> resetPassword(Authentication authentication){
-        TaiKhoan taiKhoan= taiKhoanRepository.findBySinhVien_MaSv(authentication.getName());
-        taiKhoan.setPassword("1");
-        return ResponseEntity.status(HttpStatus.OK).build();
+    @PutMapping("/reset-password/{username}")
+    ResponseEntity<ResponseObject> resetPassword(@PathVariable String username){
+
+       Optional<TaiKhoan> taiKhoan= taiKhoanRepository.findByUsername(username);
+        if(taiKhoan.isEmpty())
+            return ResponseEntity.badRequest().body(
+                    new ResponseObject("false","Thất bại","")
+            );
+        else {
+            TaiKhoan tk=taiKhoan.get();
+            tk.setPassword(passwordEncoder.encode("1"));
+            taiKhoanRepository.save(tk);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new ResponseObject("ok","Reset thành công","")
+            );
+        }
     }
 
 }

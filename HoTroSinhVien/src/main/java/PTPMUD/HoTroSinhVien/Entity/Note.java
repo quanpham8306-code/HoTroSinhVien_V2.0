@@ -26,6 +26,6 @@ public class Note {
     @Convert(converter = StringCryptoConverter.class)
     private String note;
     @ManyToOne
-    @JoinColumn(name = "id_sv")
+    @JoinColumn(name = "idSv")
     private SinhVien sinhVien;
 }

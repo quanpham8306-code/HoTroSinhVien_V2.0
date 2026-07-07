@@ -3,11 +3,15 @@ package PTPMUD.HoTroSinhVien.Service;
 import PTPMUD.HoTroSinhVien.DTO.Respone.BuoiHoc;
 import PTPMUD.HoTroSinhVien.DTO.Respone.HocKyNamHocDTO;
 import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.SinhVienDTO;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
+import PTPMUD.HoTroSinhVien.Entity.Diem;
 import PTPMUD.HoTroSinhVien.Entity.LopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
+import PTPMUD.HoTroSinhVien.Mapper.SinhVienMapper;
 import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
+import PTPMUD.HoTroSinhVien.Repository.DiemRepository;
 import PTPMUD.HoTroSinhVien.Repository.LopHocPhanRepository;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
 import PTPMUD.HoTroSinhVien.Util.LichHocValidator;
@@ -31,7 +35,10 @@ public class DangKyLopHocPhanService {
     SinhVienRepository sinhVienRepository;
     LopHocPhanRepository lopHocPhanRepository;
     DangKyLopHocPhanRepository dangKyRepository;
-    private final LopHocPhanMapper lopHocPhanMapper;
+    LopHocPhanMapper lopHocPhanMapper;
+    DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
+    SinhVienMapper sinhVienMapper;
+    DiemRepository diemRepository;
 
     @Transactional
     public DangKyLopHocPhan dangKyLopHocPhan(String maSv , String  maLopHP) {
@@ -145,42 +152,61 @@ public class DangKyLopHocPhanService {
         return lichHocKyNamHocDTOS;
     }
 
-    public List<String > nhapExcelListSinhVienVaoLopHP(MultipartFile file,String maLopHP)
-    {
-        LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
-        List<String> error=new ArrayList<>();
-        if(lopHocPhan==null){
+    @Transactional
+    public List<String> nhapExcelListSinhVienVaoLopHP(MultipartFile file, String maLopHP) {
+        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
+        List<String> errors = new ArrayList<>();
+        if (lopHocPhan == null) {
             throw new RuntimeException("Lớp học phần không tồn tại");
         }
-        try {
-            Workbook workbook= WorkbookFactory.create(file.getInputStream());
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
             DataFormatter formatter = new DataFormatter();
-            for(int i=1;i<=sheet.getLastRowNum();i++)
-            {
-                Row row=sheet.getRow(i);
-                if(row==null) continue;
-                else {
-                    String maSv=formatter.formatCellValue(row.getCell(1)).trim();
-                    SinhVien sinhVien=sinhVienRepository.findByMaSv(maSv);
-                    if (sinhVien == null) {
-                        System.out.println("Dòng " + (i + 1) + ": mã sinh viên không tồn tại");
-                        continue;
-                    }
-                    if(!dangKyRepository.existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(sinhVien.getIdSv(), lopHocPhan.getIdLopHP()))
-                    {
-                        DangKyLopHocPhan  dangKyLopHocPhan=new DangKyLopHocPhan(sinhVien,lopHocPhan);
-                        dangKyRepository.save(dangKyLopHocPhan);
-                    }
-                    else
-                        System.out.println("Dòng " + (i + 1) + ": sinh viên đã có trong lớp");
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                String maSv = formatter.formatCellValue(row.getCell(0)).trim();
+                if (maSv.isBlank()) {
+                    errors.add("Dòng " + (i + 1) + ": mã sinh viên trống");
+                    continue;
                 }
+                SinhVien sinhVien = sinhVienRepository.findByMaSv(maSv);
+                if (sinhVien == null) {
+                    errors.add("Dòng " + (i + 1) + ": mã sinh viên không tồn tại - " + maSv);
+                    continue;
+                }
+
+                boolean existed = dangKyRepository
+                        .existsBySinhVien_IdSvAndLopHocPhan_IdLopHP(
+                                sinhVien.getIdSv(),
+                                lopHocPhan.getIdLopHP()
+                        );
+                if (existed) {
+                    errors.add("Dòng " + (i + 1) + ": sinh viên đã có trong lớp - " + maSv);
+                    continue;
+                }
+                if(check_cung_nganh(maSv,maLopHP)==false){
+                    errors.add("Dòng " + (i + 1) + ": sinh viên khác ngành" );
+                    continue;}
+                int khoaSV = Integer.parseInt(sinhVien.getKhoa().substring(1));
+                int khoaLHP = Integer.parseInt(lopHocPhan.getKhoa().substring(1));
+
+                if (khoaSV < khoaLHP) {
+                    errors.add("Dòng " + (i + 1) + ": sinh viên khóa dưới không được đăng ký");
+                }
+                List<LopHocPhan> lopHocPhans = dangKyRepository.findBySinhVien_MaSv(maSv)
+                        .stream()
+                        .map(DangKyLopHocPhan::getLopHocPhan)
+                        .toList();
+                validateKhongTrungMon(lopHocPhans,lopHocPhan);
+                validateKhongTrungLich(lopHocPhans,lopHocPhan);
+                dangKyRepository.save(new DangKyLopHocPhan(sinhVien, lopHocPhan));
             }
-            workbook.close();
         } catch (IOException e) {
-            throw new RuntimeException("Không thể đọc file excel",e);
+            throw new RuntimeException("Không thể đọc file excel", e);
         }
-        return error;
+
+        return errors;
     }
 
     public void themSinhVienVaoLopHP(String maSv,String maLopHp)
@@ -218,11 +244,28 @@ public class DangKyLopHocPhanService {
             SinhVien sinhVien= sinhVienRepository.findByMaSv(maSv);
             findSinhVien(maSv);
             LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
-            findLopHocPhan(maLopHP);
+
             if(!dangKyRepository.existsBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHP))
                 throw  new RuntimeException("Sinh viên có mã sinh viên "+maSv+ " không có trong lớp học phần "+maLopHP);
+            DangKyLopHocPhan dangKyLopHocPhan=dangKyLopHocPhanRepository.findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHP);
+            Diem diem=diemRepository.findByDangKyLopHocPhan(dangKyLopHocPhan);
+            if(diem!=null)
+                diemRepository.delete(diem);
             dangKyRepository.delete(dangKyRepository.findBySinhVien_MaSvAndLopHocPhan_MaLopHP(maSv,maLopHP));
         }
+
+    public List<SinhVienDTO> xemSinhVienOfLop(String maSv)
+    {
+        List<SinhVienDTO> sinhVienDTOS=new ArrayList<>();
+        List<DangKyLopHocPhan> dangKyLopHocPhanList=dangKyLopHocPhanRepository.findByLopHocPhan_MaLopHP(maSv);
+        for(DangKyLopHocPhan dangKyLopHocPhan: dangKyLopHocPhanList)
+        {
+            SinhVien sinhVien=dangKyLopHocPhan.getSinhVien();
+            SinhVienDTO sinhVienDTO=sinhVienMapper.entityToDto(sinhVien);
+            sinhVienDTOS.add(sinhVienDTO);
+        }
+        return sinhVienDTOS;
+    }
 
 }
 

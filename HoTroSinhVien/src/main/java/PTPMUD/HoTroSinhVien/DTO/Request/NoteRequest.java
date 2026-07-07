@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NoteRequest {
+    private int id;
     private String title;
     private LocalDate date;
     private String tag;

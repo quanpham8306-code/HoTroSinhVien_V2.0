@@ -1,14 +1,16 @@
 package PTPMUD.HoTroSinhVien.Service;
 
-import PTPMUD.HoTroSinhVien.DTO.Respone.LopHocPhanDTO;
-import PTPMUD.HoTroSinhVien.DTO.Respone.pickedClassDTO;
+import PTPMUD.HoTroSinhVien.DTO.Respone.*;
 import PTPMUD.HoTroSinhVien.Entity.*;
 import PTPMUD.HoTroSinhVien.Mapper.LopHocPhanMapper;
 import PTPMUD.HoTroSinhVien.Mapper.MonHocMapper;
+import PTPMUD.HoTroSinhVien.Mapper.SinhVienMapper;
 import PTPMUD.HoTroSinhVien.Repository.*;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.math3.analysis.function.Sinh;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,22 +29,119 @@ public class LopHocPhanService {
     private final MonHocService monHocService;
     private final LopHocPhanMapper lopHocPhanMapper;
     DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
-    ChiTietThoiKhoaBieuRepository chiTietThoiKhoaBieuRepository;
+    SinhVienRepository sinhVienRepository;
+    LichAoRepository lichAoRepository;
+    LichAoService lichAoService;
     DiemRepository diemRepository;
+    SinhVienMapper  sinhVienMapper;
 
-    public LopHocPhan createLPH(LopHocPhan lopHocPhan, int idMonHoc){
-        MonHoc monHoc = monHocRepository.findById(idMonHoc)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy môn học"));
+    public String createLPH(LopHocPhan lopHocPhan, String maMon){
+        MonHoc monHoc = monHocRepository.findByMaMon(maMon);
 
-        int soLopHienCo = lopHocPhanRepository.countByMonHoc_IdMon(idMonHoc);
-
+        if(check_cungNgay(lopHocPhan) && chech_cungThuAndGioAndPhong(lopHocPhan) )
+           return ("Lớp bị trùng lịch");
+        if(check_cungNgay(lopHocPhan) && check_cungGiangVienAndThuAndGio(lopHocPhan))
+           return ("Lớp bị trùng lịch");
+        int soLopHienCo = lopHocPhanRepository.countByMonHoc_MaMon(maMon);
         String maLopHP = vietTat(monHoc.getTenMonHoc()) + "-"+ lopHocPhan.getKhoa()+ "-L" + String.format("%02d", soLopHienCo + 1);
 
         lopHocPhan.setMaLopHP(maLopHP);
         lopHocPhan.setMonHoc(monHoc);
-
-        return lopHocPhanRepository.save(lopHocPhan);
+        lopHocPhanRepository.save(lopHocPhan);
+        return "Thêm lớp thành công";
     }
+
+    public String taoLHP(LopHocPhan lopHocPhan, String tenMon){
+        MonHoc monHoc = monHocRepository.findBytenMonHoc(tenMon);
+        if (monHoc == null) {
+            return ("Môn học không tồn tại");}
+
+        if(check_cungNgay(lopHocPhan) && chech_cungThuAndGioAndPhong(lopHocPhan) )
+            return ("Lớp bị trùng lịch");
+        if(check_cungNgay(lopHocPhan) && check_cungGiangVienAndThuAndGio(lopHocPhan))
+            return ("Lớp bị trùng lịch");
+        int soLopHienCo = lopHocPhanRepository.countByMonHoc_MaMon(monHoc.getMaMon());
+        String maLopHP = vietTat(monHoc.getTenMonHoc()) + "-"+ lopHocPhan.getKhoa()+ "-L" + String.format("%02d", soLopHienCo + 1);
+
+        lopHocPhan.setMaLopHP(maLopHP);
+        lopHocPhan.setMonHoc(monHoc);
+        lopHocPhanRepository.save(lopHocPhan);
+        return "Thêm lớp thành công";
+    }
+
+    public boolean check_TrungPhongHoc(LopHocPhanDTO lopHocPhanDTO)
+    {
+        List<LopHocPhan> lopHocPhans=lopHocPhanRepository.findAll();
+        for(LopHocPhan lopHocPhan: lopHocPhans)
+            if(lopHocPhanDTO.getPhongHoc().equalsIgnoreCase(lopHocPhan.getPhongHoc()))
+                return true;
+        return false;
+    }
+    public boolean check_TrungThu(LopHocPhanDTO lopHocPhanDTO)
+    {
+        List<LopHocPhan> lopHocPhans=lopHocPhanRepository.findAll();
+        for(LopHocPhan lopHocPhan: lopHocPhans)
+            if(lopHocPhanDTO.getThu()==lopHocPhan.getThu())
+                return true;
+        return false;
+    }
+
+    public boolean check_cungNgay(LopHocPhan lop) {
+        List<LopHocPhan> lopHocPhans = lopHocPhanRepository.findAll();
+
+        for (LopHocPhan lopHocPhan : lopHocPhans) {
+
+            boolean trung = lop.getNgayBatDau().isBefore(lopHocPhan.getNgayKetThuc())
+                    && lop.getNgayKetThuc().isAfter(lopHocPhan.getNgayBatDau());
+
+            if (trung) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    public boolean check_cungGio(LopHocPhanDTO dto) {
+        List<LopHocPhan> lopHocPhans = lopHocPhanRepository.findAll();
+
+        for (LopHocPhan lop : lopHocPhans) {
+
+            boolean trung = dto.getGioBatDau().isBefore(lop.getGioKetThuc())
+                    && dto.getGioKetThuc().isAfter(lop.getGioBatDau());
+
+            if (trung) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean check_cungGiangVienAndThuAndGio(LopHocPhan lop) {
+        List<LopHocPhan> lopHocPhans = lopHocPhanRepository.findAll();
+        for (LopHocPhan lopHocPhan: lopHocPhans)
+            if( lop.getThu()==lopHocPhan.getThu())
+                if(lop.getGioBatDau().isBefore(lopHocPhan.getGioKetThuc()) &&
+                        lop.getGioKetThuc().isAfter(lopHocPhan.getGioBatDau()))
+                    if(lop.getGiangVien().equalsIgnoreCase(lopHocPhan.getGiangVien()))
+                return true;
+        return false;
+    }
+
+    public boolean chech_cungThuAndGioAndPhong(LopHocPhan lop)
+    {
+        List<LopHocPhan> lopHocPhans = lopHocPhanRepository.findAll();
+        for (LopHocPhan lopHocPhan : lopHocPhans)
+            if( lop.getThu()==lopHocPhan.getThu())
+                if(lop.getGioBatDau().isBefore(lopHocPhan.getGioKetThuc()) &&
+                        lop.getGioKetThuc().isAfter(lopHocPhan.getGioBatDau()))
+                    if(lop.getPhongHoc().equalsIgnoreCase(lopHocPhan.getPhongHoc()))
+                        return true;
+        return false;
+    }
+
     public String vietTat(String text) {
         if (text == null || text.isBlank()) {
             return "";
@@ -109,12 +208,13 @@ public class LopHocPhanService {
                             MonHoc mh = new MonHoc(soTinChi,tenMon);
                             monHocService.createMonHoc(mh);
                         }
+
                         LopHocPhan lopHocPhan= new LopHocPhan(giangVien,phongHoc,thu, gioBatDau,gioKetThuc,ngayBatDau
                                 ,ngayKetThuc,siSoToiDa,hocKy,khoa,monHocRepository.findBytenMonHoc(tenMon),nganh,namHoc);
-                        createLPH(lopHocPhan,monHocRepository.findBytenMonHoc(tenMon).getIdMon());
-
+                        String result=createLPH(lopHocPhan,monHocRepository.findBytenMonHoc(tenMon).getMaMon());
+                        errors.add("Dòng " + (i + 1) + " : " +result);
                     }catch(Exception o) {
-                        errors.add("Dòng " + (i + 1) + " lỗi: " + o.getMessage());
+                        errors.add("Dòng " + (i + 1) + " : " + o.getMessage());
 
                     }
                 }
@@ -128,7 +228,7 @@ public class LopHocPhanService {
     }
 
 
-    public pickedClassDTO pickedClass(String maMon, String khoa, String nganh){
+    public List<LopHocPhanDTO> getLopOfMon(String maMon, String khoa, String nganh){
         List<LopHocPhan> lopHocPhanList = lopHocPhanRepository.findByNgayBatDauAfterAndKhoaAndNganhAndMonHoc_MaMon(
                 LocalDate.now(),khoa,nganh,maMon);
         List<LopHocPhanDTO> lopHocPhanDTOList=new ArrayList<>();
@@ -137,25 +237,34 @@ public class LopHocPhanService {
             LopHocPhanDTO lopHocPhanDTO=lopHocPhanMapper.entityToDto(lopHocPhan);
             lopHocPhanDTOList.add(lopHocPhanDTO);
         }
-        return new pickedClassDTO(maMon,lopHocPhanDTOList);
+        return lopHocPhanDTOList;
     }
 
-    public void delete(String maLopHP)
-    {
-            LopHocPhan lopHocPhan=lopHocPhanRepository.findByMaLopHP(maLopHP);
-            if(lopHocPhan==null)
-                throw  new RuntimeException("Không tồn tại lớp học phần này");
-            List<DangKyLopHocPhan> dangKyLopHocPhanList=dangKyLopHocPhanRepository.findByLopHocPhan_MaLopHP(maLopHP);
-            for(DangKyLopHocPhan dangKyLopHocPhan : dangKyLopHocPhanList)
-            {
-                Diem diems=diemRepository.findByDangKyLopHocPhan(dangKyLopHocPhan);
-                diemRepository.delete(diems);
-                List<ChiTietThoiKhoaBieu> chiTietThoiKhoaBieuList= chiTietThoiKhoaBieuRepository.findByLopHocPhan(lopHocPhan);
-                for(ChiTietThoiKhoaBieu chiTietThoiKhoaBieu: chiTietThoiKhoaBieuList)
-                    chiTietThoiKhoaBieuRepository.delete(chiTietThoiKhoaBieu);
-                dangKyLopHocPhanRepository.delete(dangKyLopHocPhan);
-                lopHocPhanRepository.delete(lopHocPhan) ;
+
+    @Transactional
+    public void delete(String maLopHP) {
+        LopHocPhan lopHocPhan = lopHocPhanRepository.findByMaLopHP(maLopHP);
+
+        if (lopHocPhan == null) {
+            throw new RuntimeException("Không tồn tại lớp học phần này");
+        }
+
+        List<DangKyLopHocPhan> dangKyList =
+                dangKyLopHocPhanRepository.findByLopHocPhan_MaLopHP(maLopHP);
+
+        for (DangKyLopHocPhan dangKy : dangKyList) {
+            Diem diem = diemRepository.findByDangKyLopHocPhan(dangKy);
+            if (diem != null) {
+                diemRepository.delete(diem);
             }
 
+            dangKyLopHocPhanRepository.delete(dangKy);
+        }
+
+        lopHocPhanRepository.delete(lopHocPhan);
     }
+
+
+
+
 }

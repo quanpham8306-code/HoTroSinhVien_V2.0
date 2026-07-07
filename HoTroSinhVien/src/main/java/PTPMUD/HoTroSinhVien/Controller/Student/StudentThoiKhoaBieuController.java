@@ -39,10 +39,11 @@ public class StudentThoiKhoaBieuController {
                 )
         );
     }
-    @GetMapping("/{ky}")
-    ResponseEntity<ResponseObject> getScheduleByKy(
+    @GetMapping("/{ky}/{namHoc}")
+    ResponseEntity<ResponseObject> getScheduleByKyAndNamHoc(
             Authentication authentication,
-            @PathVariable int ky
+            @PathVariable int ky,
+            @PathVariable String namHoc
     ) {
         String maSv = authentication.getName();
 
@@ -50,7 +51,7 @@ public class StudentThoiKhoaBieuController {
                 new ResponseObject(
                         "ok",
                         "Query schedule successfully",
-                        thoiKhoaBieuService.getScheduleByKy(maSv, ky)
+                        thoiKhoaBieuService.getScheduleByKyAndNamHoc(maSv,ky,namHoc)
                 )
         );
     }
@@ -70,15 +71,7 @@ public class StudentThoiKhoaBieuController {
         );
     }
 
-    @GetMapping("/export")
-    ResponseEntity<InputStreamResource> exportMySchedule(Authentication authentication) throws Exception {
-        ByteArrayInputStream excel = thoiKhoaBieuService.xuatExcelThoiKhoaBieu(authentication.getName());
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=lichhocfull.xlsx")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(new InputStreamResource(excel));
-    }
 
     @GetMapping("/baBuoiGanNhat")
     public ResponseEntity<ResponseObject> baBuoiGanNhat(Authentication authentication) throws Exception{
@@ -92,16 +85,5 @@ public class StudentThoiKhoaBieuController {
         );
     }
 
-    @PostMapping("/importExcel")
-    ResponseEntity<?> importExcel(
-            @RequestParam ("thoikhoabieu")MultipartFile file,
-            Authentication authentication
-    ){
-        try {
-            thoiKhoaBieuService.nhapExcelThoiKhoaBieu(file,authentication.getName());
-            return ResponseEntity.status(HttpStatus.OK).body("Import thành công");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+
 }

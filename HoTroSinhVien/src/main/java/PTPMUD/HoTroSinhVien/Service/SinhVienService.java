@@ -3,11 +3,11 @@ package PTPMUD.HoTroSinhVien.Service;
 import PTPMUD.HoTroSinhVien.Entity.DangKyLopHocPhan;
 import PTPMUD.HoTroSinhVien.Entity.SinhVien;
 import PTPMUD.HoTroSinhVien.Entity.TaiKhoan;
-import PTPMUD.HoTroSinhVien.Entity.ThoiKhoaBieu;
+import PTPMUD.HoTroSinhVien.Entity.LichAo;
 import PTPMUD.HoTroSinhVien.Repository.DangKyLopHocPhanRepository;
+import PTPMUD.HoTroSinhVien.Repository.LichAoRepository;
 import PTPMUD.HoTroSinhVien.Repository.SinhVienRepository;
 import PTPMUD.HoTroSinhVien.Repository.TaiKhoanRepository;
-import PTPMUD.HoTroSinhVien.Repository.ThoiKhoaBieuRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +30,7 @@ public class SinhVienService {
     TaiKhoanRepository taiKhoanRepository;
     private final DangKyLopHocPhanService dangKyLopHocPhanService;
     private final DangKyLopHocPhanRepository dangKyLopHocPhanRepository;
-    private final ThoiKhoaBieuRepository thoiKhoaBieuRepository;
+    LichAoRepository  lichAoRepository;
 
     @Transactional
     public SinhVien createSinhVien(SinhVien sinhVien) {
@@ -329,10 +328,8 @@ public class SinhVienService {
 
         dangKyLopHocPhanRepository.deleteAll(dangKyList);
 
-        List<ThoiKhoaBieu> thoiKhoaBieus =
-                thoiKhoaBieuRepository.findBySinhVien_MaSv(maSv);
-
-        thoiKhoaBieuRepository.deleteAll(thoiKhoaBieus);
+        LichAo lichAo=lichAoRepository.findBySinhVien_MaSv(maSv);
+        lichAoRepository.delete(lichAo);
 
         taiKhoanRepository.findByUsername(maSv)
                 .ifPresent(taiKhoanRepository::delete);
